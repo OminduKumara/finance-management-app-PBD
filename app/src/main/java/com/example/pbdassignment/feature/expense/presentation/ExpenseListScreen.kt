@@ -23,7 +23,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 fun ExpenseListScreen(
     viewModel: ExpenseViewModel,
     modifier: Modifier = Modifier,
-    onAddExpenseClick: () -> Unit = {}
+    onAddExpenseClick: () -> Unit = {},
+    onEditExpenseClick: (com.example.pbdassignment.feature.expense.domain.Expense) -> Unit = {}
 ) {
     val expenses by viewModel.expenses.collectAsState()
 
@@ -58,6 +59,9 @@ fun ExpenseListScreen(
                         expense = expense,
                         onDeleteClick = { expenseId ->
                             viewModel.deleteExpense(expenseId)
+                        },
+                        onEditClick = { selectedExpense ->
+                            onEditExpenseClick(selectedExpense)
                         }
                     )
                 }

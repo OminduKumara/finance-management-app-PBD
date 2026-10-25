@@ -21,11 +21,17 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun QuickAddExpenseScreen(
     modifier: Modifier = Modifier,
+    initialExpense: com.example.pbdassignment.feature.expense.domain.Expense? = null,
     onSave: (title: String, amount: Double) -> Unit,
     onCancel: () -> Unit
 ) {
-    var title by remember { mutableStateOf("") }
-    var amountText by remember { mutableStateOf("") }
+    var title by remember(initialExpense?.id) {
+        mutableStateOf(initialExpense?.title ?: "")
+    }
+
+    var amountText by remember(initialExpense?.id) {
+        mutableStateOf(initialExpense?.amount?.toString() ?: "")
+    }
 
     Column(
         modifier = modifier
@@ -34,7 +40,11 @@ fun QuickAddExpenseScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = "Add Expense",
+            text = if (initialExpense == null) {
+                "Add Expense"
+            } else {
+                "Edit Expense"
+            },
             style = MaterialTheme.typography.headlineMedium
         )
 

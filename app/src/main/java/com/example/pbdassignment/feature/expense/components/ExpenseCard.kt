@@ -24,8 +24,9 @@ import androidx.compose.material3.Button
 fun ExpenseCard(
     expense: Expense,
     modifier: Modifier = Modifier,
-    onDeleteClick: (String) -> Unit = {}
-) {
+    onDeleteClick: (String) -> Unit = {},
+    onEditClick: (Expense) -> Unit = {}
+){
     val formattedDate = SimpleDateFormat(
         "dd MMM yyyy",
         Locale.getDefault()
@@ -64,6 +65,13 @@ fun ExpenseCard(
                 },
                 style = MaterialTheme.typography.bodyMedium
             )
+
+            Button(
+                onClick = { onEditClick(expense) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Edit")
+            }
 
             Button(
                 onClick = { onDeleteClick(expense.id) },

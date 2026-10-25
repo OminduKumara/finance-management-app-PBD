@@ -36,26 +36,47 @@ class MainActivity : ComponentActivity() {
 
                 var showAddExpense by remember { mutableStateOf(false) }
 
+                var expenseToEdit by remember {
+                    mutableStateOf<com.example.pbdassignment.feature.expense.domain.Expense?>(null)
+                }
+
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     if (showAddExpense) {
                         QuickAddExpenseScreen(
                             modifier = Modifier.padding(innerPadding),
-                            onSave = { title, amount ->
-                                val expense = com.example.pbdassignment.feature.expense.domain.Expense(
-                                    id = java.util.UUID.randomUUID().toString(),
-                                    title = title,
-                                    amount = amount,
-                                    categoryId = "other",
-                                    categoryName = "Other",
-                                    dateMillis = System.currentTimeMillis(),
-                                    isCommitted = false,
-                                    paymentMethod = "Cash"
-                                )
+                            initialExpense = expenseToEdit,
 
-                                expenseViewModel.addExpense(expense)
+                            onSave = { title, amount ->
+                                val existingExpense = expenseToEdit
+
+                                if (existingExpense != null) {
+                                    expenseViewModel.updateExpense(
+                                        existingExpense.copy(
+                                            title = title,
+                                            amount = amount
+                                        )
+                                    )
+                                } else {
+                                    val expense = com.example.pbdassignment.feature.expense.domain.Expense(
+                                        id = java.util.UUID.randomUUID().toString(),
+                                        title = title,
+                                        amount = amount,
+                                        categoryId = "other",
+                                        categoryName = "Other",
+                                        dateMillis = System.currentTimeMillis(),
+                                        isCommitted = false,
+                                        paymentMethod = "Cash"
+                                    )
+
+                                    expenseViewModel.addExpense(expense)
+                                }
+
+                                expenseToEdit = null
                                 showAddExpense = false
                             },
+
                             onCancel = {
+                                expenseToEdit = null
                                 showAddExpense = false
                             }
                         )
@@ -64,6 +85,11 @@ class MainActivity : ComponentActivity() {
                             viewModel = expenseViewModel,
                             modifier = Modifier.padding(innerPadding),
                             onAddExpenseClick = {
+                                expenseToEdit = null
+                                showAddExpense = true
+                            },
+                            onEditExpenseClick = { selectedExpense ->
+                                expenseToEdit = selectedExpense
                                 showAddExpense = true
                             }
                         )

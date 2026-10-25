@@ -33,4 +33,10 @@ class ExpenseViewModel(
             repository.deleteExpense(id)
         }
     }
+
+    fun updateExpense(expense: Expense) {
+        viewModelScope.launch {
+            repository.updateExpense(expense)
+        }
+    }
 }
