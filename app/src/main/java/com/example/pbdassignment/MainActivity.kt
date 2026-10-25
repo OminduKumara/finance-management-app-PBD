@@ -7,11 +7,19 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+
 import com.example.pbdassignment.ui.theme.PbdassignmentTheme
+
+import com.example.pbdassignment.feature.expense.presentation.ExpenseListScreen
+
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pbdassignment.feature.expense.data.FakeExpenseRepository
+import com.example.pbdassignment.feature.expense.presentation.ExpenseViewModel
+import com.example.pbdassignment.feature.expense.presentation.ExpenseViewModelFactory
+
+import androidx.compose.runtime.remember
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,29 +27,19 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PbdassignmentTheme {
+                val repository = remember { FakeExpenseRepository() }
+
+                val expenseViewModel: ExpenseViewModel = viewModel(
+                    factory = ExpenseViewModelFactory(repository)
+                )
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
+                    ExpenseListScreen(
+                        viewModel = expenseViewModel,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
+
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    PbdassignmentTheme {
-        Greeting("Android")
     }
 }
