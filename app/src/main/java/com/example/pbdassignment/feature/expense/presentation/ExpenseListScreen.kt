@@ -16,10 +16,14 @@ import androidx.compose.ui.unit.dp
 
 import com.example.pbdassignment.feature.expense.components.ExpenseCard
 
+import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.fillMaxWidth
+
 @Composable
 fun ExpenseListScreen(
     viewModel: ExpenseViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onAddExpenseClick: () -> Unit = {}
 ) {
     val expenses by viewModel.expenses.collectAsState()
 
@@ -33,6 +37,12 @@ fun ExpenseListScreen(
             text = "My Expenses",
             style = MaterialTheme.typography.headlineMedium
         )
+        Button(
+            onClick = onAddExpenseClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Add Expense")
+        }
 
         if (expenses.isEmpty()) {
             Text("No expenses yet.")
