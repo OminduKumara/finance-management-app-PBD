@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.MaterialTheme
@@ -22,7 +25,7 @@ import androidx.compose.ui.unit.dp
 fun QuickAddExpenseScreen(
     modifier: Modifier = Modifier,
     initialExpense: com.example.pbdassignment.feature.expense.domain.Expense? = null,
-    onSave: (title: String, amount: Double) -> Unit,
+    onSave: (title: String, amount: Double, categoryName: String) -> Unit,
     onCancel: () -> Unit
 ) {
     var title by remember(initialExpense?.id) {
@@ -31,6 +34,24 @@ fun QuickAddExpenseScreen(
 
     var amountText by remember(initialExpense?.id) {
         mutableStateOf(initialExpense?.amount?.toString() ?: "")
+    }
+
+    val categories = listOf(
+        "Food",
+        "Transport",
+        "Shopping",
+        "Bills",
+        "Entertainment",
+        "Health",
+        "Other"
+    )
+
+    var selectedCategory by remember(initialExpense?.id) {
+        mutableStateOf(initialExpense?.categoryName ?: "Other")
+    }
+
+    var categoryMenuExpanded by remember {
+        mutableStateOf(false)
     }
 
     Column(
@@ -70,6 +91,29 @@ fun QuickAddExpenseScreen(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
+        Column {
+            OutlinedButton(
+                onClick = { categoryMenuExpanded = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Category: $selectedCategory")
+            }
+
+            DropdownMenu(
+                expanded = categoryMenuExpanded,
+                onDismissRequest = { categoryMenuExpanded = false }
+            ) {
+                categories.forEach { category ->
+                    DropdownMenuItem(
+                        text = { Text(category) },
+                        onClick = {
+                            selectedCategory = category
+                            categoryMenuExpanded = false
+                        }
+                    )
+                }
+            }
+        }
 
         if (amountText.isNotBlank() &&
             (amountText.toDoubleOrNull() == null ||
@@ -85,7 +129,7 @@ fun QuickAddExpenseScreen(
             onClick = {
                 val amount = amountText.toDoubleOrNull()
                 if (title.isNotBlank() && amount != null && amount > 0) {
-                    onSave(title.trim(), amount)
+                    onSave(title.trim(), amount, selectedCategory)
                 }
             },
             modifier = Modifier.fillMaxWidth(),

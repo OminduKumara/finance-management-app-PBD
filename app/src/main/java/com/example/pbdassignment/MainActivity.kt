@@ -46,14 +46,16 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.padding(innerPadding),
                             initialExpense = expenseToEdit,
 
-                            onSave = { title, amount ->
+                            onSave = { title, amount, categoryName ->
                                 val existingExpense = expenseToEdit
 
                                 if (existingExpense != null) {
                                     expenseViewModel.updateExpense(
                                         existingExpense.copy(
                                             title = title,
-                                            amount = amount
+                                            amount = amount,
+                                            categoryId = categoryName.lowercase(),
+                                            categoryName = categoryName
                                         )
                                     )
                                 } else {
@@ -61,8 +63,8 @@ class MainActivity : ComponentActivity() {
                                         id = java.util.UUID.randomUUID().toString(),
                                         title = title,
                                         amount = amount,
-                                        categoryId = "other",
-                                        categoryName = "Other",
+                                        categoryId = categoryName.lowercase(),
+                                        categoryName = categoryName,
                                         dateMillis = System.currentTimeMillis(),
                                         isCommitted = false,
                                         paymentMethod = "Cash"
