@@ -21,7 +21,8 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun QuickAddExpenseScreen(
     modifier: Modifier = Modifier,
-    onSave: (title: String, amount: Double) -> Unit
+    onSave: (title: String, amount: Double) -> Unit,
+    onCancel: () -> Unit
 ) {
     var title by remember { mutableStateOf("") }
     var amountText by remember { mutableStateOf("") }
@@ -82,6 +83,12 @@ fun QuickAddExpenseScreen(
                     (amountText.toDoubleOrNull() ?: 0.0) > 0.0
         ) {
             Text("Save Expense")
+        }
+        Button(
+            onClick = onCancel,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Cancel")
         }
     }
 }

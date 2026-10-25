@@ -54,6 +54,9 @@ class MainActivity : ComponentActivity() {
 
                                 expenseViewModel.addExpense(expense)
                                 showAddExpense = false
+                            },
+                            onCancel = {
+                                showAddExpense = false
                             }
                         )
                     } else {
