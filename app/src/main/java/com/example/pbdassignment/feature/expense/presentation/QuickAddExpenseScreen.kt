@@ -45,6 +45,13 @@ fun QuickAddExpenseScreen(
             singleLine = true
         )
 
+        if (title.isNotEmpty() && title.isBlank()) {
+            Text(
+                text = "Expense name cannot contain only spaces.",
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+
         OutlinedTextField(
             value = amountText,
             onValueChange = { amountText = it },
