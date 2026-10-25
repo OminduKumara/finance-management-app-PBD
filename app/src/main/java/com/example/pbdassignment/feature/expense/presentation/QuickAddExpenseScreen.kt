@@ -53,6 +53,16 @@ fun QuickAddExpenseScreen(
             singleLine = true
         )
 
+        if (amountText.isNotBlank() &&
+            (amountText.toDoubleOrNull() == null ||
+                    amountText.toDoubleOrNull()!! <= 0.0)
+        ) {
+            Text(
+                text = "Enter a valid amount greater than zero.",
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+
         Button(
             onClick = {
                 val amount = amountText.toDoubleOrNull()
