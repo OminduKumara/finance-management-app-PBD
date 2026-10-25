@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 
+import kotlinx.coroutines.launch
+
 class ExpenseViewModel(
     private val repository: ExpenseRepository
 ) : ViewModel() {
@@ -19,4 +21,10 @@ class ExpenseViewModel(
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = emptyList()
         )
+
+    fun addExpense(expense: Expense) {
+        viewModelScope.launch {
+            repository.addExpense(expense)
+        }
+    }
 }
