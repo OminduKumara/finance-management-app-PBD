@@ -54,7 +54,12 @@ fun ExpenseListScreen(
                     items = expenses,
                     key = { it.id }
                 ) { expense ->
-                    ExpenseCard(expense = expense)
+                    ExpenseCard(
+                        expense = expense,
+                        onDeleteClick = { expenseId ->
+                            viewModel.deleteExpense(expenseId)
+                        }
+                    )
                 }
             }
         }

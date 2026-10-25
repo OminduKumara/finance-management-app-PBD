@@ -18,10 +18,13 @@ import java.util.Locale
 import java.text.SimpleDateFormat
 import java.util.Date
 
+import androidx.compose.material3.Button
+
 @Composable
 fun ExpenseCard(
     expense: Expense,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onDeleteClick: (String) -> Unit = {}
 ) {
     val formattedDate = SimpleDateFormat(
         "dd MMM yyyy",
@@ -61,6 +64,13 @@ fun ExpenseCard(
                 },
                 style = MaterialTheme.typography.bodyMedium
             )
+
+            Button(
+                onClick = { onDeleteClick(expense.id) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Delete")
+            }
         }
     }
 }
