@@ -45,6 +45,8 @@ fun ExpenseCard(
                 .format(expense.amount)
 
             Text("${expense.currencyCode} $formattedAmount")
+            Text("Category: ${expense.categoryName}")
+            Text("Payment method: ${expense.paymentMethod}")
 
             Text(
                 text = "Date: $formattedDate",
