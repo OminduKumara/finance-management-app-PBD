@@ -15,11 +15,19 @@ import com.example.pbdassignment.feature.expense.domain.Expense
 import java.text.NumberFormat
 import java.util.Locale
 
+import java.text.SimpleDateFormat
+import java.util.Date
+
 @Composable
 fun ExpenseCard(
     expense: Expense,
     modifier: Modifier = Modifier
 ) {
+    val formattedDate = SimpleDateFormat(
+        "dd MMM yyyy",
+        Locale.getDefault()
+    ).format(Date(expense.dateMillis))
+
     Card(
         modifier = modifier.fillMaxWidth()
     ) {
@@ -38,7 +46,10 @@ fun ExpenseCard(
 
             Text("${expense.currencyCode} $formattedAmount")
 
-            Text("Category: ${expense.categoryName}")
+            Text(
+                text = "Date: $formattedDate",
+                style = MaterialTheme.typography.bodyMedium
+            )
 
             Text(
                 text = if (expense.isCommitted) {
