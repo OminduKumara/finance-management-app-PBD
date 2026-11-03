@@ -21,7 +21,15 @@ import com.example.pbdassignment.feature.expense.presentation.ExpenseViewModel
 import com.example.pbdassignment.feature.expense.presentation.ExpenseViewModelFactory
 import com.example.pbdassignment.feature.expense.presentation.QuickAddExpenseScreen
 import com.example.pbdassignment.ui.theme.PbdassignmentTheme
-
+import com.example.pbdassignment.feature.category.presentation.CategoryViewModel
+import com.example.pbdassignment.feature.category.presentation.CategoryViewModelFactory
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import com.example.pbdassignment.feature.category.presentation.CategoryManagementScreen
+import androidx.compose.foundation.layout.Column
+import androidx.compose.runtime.collectAsState
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.runtime.LaunchedEffect
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,17 +42,34 @@ class MainActivity : ComponentActivity() {
                         applicationContext,
                         AppDatabase::class.java,
                         "pbd_database"
-                    ).build()
+                    )
+                        .addMigrations(AppDatabase.MIGRATION_1_2)
+                        .build()
                 }
 
                 val repository = remember {
                     RoomExpenseRepository(database.expenseDao())
                 }
 
+                val categoryRepository = remember {
+                    com.example.pbdassignment.feature.category.data.RoomCategoryRepository(
+                        database.categoryDao()
+                    )
+                }
+
                 val expenseViewModel: ExpenseViewModel = viewModel(
                     factory = ExpenseViewModelFactory(repository)
                 )
 
+                val categoryViewModel: CategoryViewModel = viewModel(
+                    factory = CategoryViewModelFactory(categoryRepository)
+                )
+
+                LaunchedEffect(Unit) {
+                    categoryViewModel.insertDefaultCategories()
+                }
+
+                var showCategoryManagement by remember { mutableStateOf(false) }
                 var showAddExpense by remember { mutableStateOf(false) }
 
                 var expenseToEdit by remember {
@@ -55,6 +80,7 @@ class MainActivity : ComponentActivity() {
                     if (showAddExpense) {
                         QuickAddExpenseScreen(
                             modifier = Modifier.padding(innerPadding),
+                            categories = categoryViewModel.categories.collectAsState().value,
                             initialExpense = expenseToEdit,
 
                             onSave = { title, amount, categoryName, paymentMethod ->
@@ -65,7 +91,9 @@ class MainActivity : ComponentActivity() {
                                         existingExpense.copy(
                                             title = title,
                                             amount = amount,
-                                            categoryId = categoryName.lowercase(),
+                                            categoryId = categoryViewModel.categories.value
+                                                .firstOrNull { it.name == categoryName }
+                                                ?.id ?: categoryName.lowercase(),
                                             categoryName = categoryName,
                                             paymentMethod = paymentMethod
                                         )
@@ -75,7 +103,9 @@ class MainActivity : ComponentActivity() {
                                         id = java.util.UUID.randomUUID().toString(),
                                         title = title,
                                         amount = amount,
-                                        categoryId = categoryName.lowercase(),
+                                        categoryId = categoryViewModel.categories.value
+                                            .firstOrNull { it.name == categoryName }
+                                            ?.id ?: categoryName.lowercase(),
                                         categoryName = categoryName,
                                         dateMillis = System.currentTimeMillis(),
                                         isCommitted = false,
@@ -94,19 +124,45 @@ class MainActivity : ComponentActivity() {
                                 showAddExpense = false
                             }
                         )
-                    } else {
-                        ExpenseListScreen(
-                            viewModel = expenseViewModel,
-                            modifier = Modifier.padding(innerPadding),
-                            onAddExpenseClick = {
-                                expenseToEdit = null
-                                showAddExpense = true
+                    } else if (showCategoryManagement) {
+                        CategoryManagementScreen(
+                            categories = categoryViewModel.categories.collectAsState().value,
+                            onAddCategory = { category ->
+                                categoryViewModel.addCategory(category)
                             },
-                            onEditExpenseClick = { selectedExpense ->
-                                expenseToEdit = selectedExpense
-                                showAddExpense = true
+                            onDeleteCategory = { categoryId ->
+                                categoryViewModel.deleteCategory(categoryId)
+                            },
+                            onBack = {
+                                showCategoryManagement = false
                             }
                         )
+                    } else {
+                        Column(
+                            modifier = Modifier.padding(innerPadding)
+                        ) {
+                            Button(
+                                onClick = {
+                                    showCategoryManagement = true
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Manage Categories")
+                            }
+
+                            ExpenseListScreen(
+                                viewModel = expenseViewModel,
+                                modifier = Modifier.weight(1f),
+                                onAddExpenseClick = {
+                                    expenseToEdit = null
+                                    showAddExpense = true
+                                },
+                                onEditExpenseClick = { selectedExpense ->
+                                    expenseToEdit = selectedExpense
+                                    showAddExpense = true
+                                }
+                            )
+                        }
                     }
                 }
             }

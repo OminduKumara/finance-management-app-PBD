@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 fun QuickAddExpenseScreen(
     modifier: Modifier = Modifier,
     initialExpense: com.example.pbdassignment.feature.expense.domain.Expense? = null,
+    categories: List<com.example.pbdassignment.feature.category.domain.Category>,
     onSave: (title: String, amount: Double, categoryName: String, paymentMethod: String) -> Unit,
     onCancel: () -> Unit
 ) {
@@ -35,18 +36,12 @@ fun QuickAddExpenseScreen(
         mutableStateOf(initialExpense?.amount?.toString() ?: "")
     }
 
-    val categories = listOf(
-        "Food",
-        "Transport",
-        "Shopping",
-        "Bills",
-        "Entertainment",
-        "Health",
-        "Other"
-    )
-
-    var selectedCategory by remember(initialExpense?.id) {
-        mutableStateOf(initialExpense?.categoryName ?: "Other")
+    var selectedCategory by remember(initialExpense?.id, categories) {
+        mutableStateOf(
+            initialExpense?.categoryName
+                ?: categories.firstOrNull()?.name
+                ?: ""
+        )
     }
 
     var categoryMenuExpanded by remember {
@@ -120,9 +115,9 @@ fun QuickAddExpenseScreen(
             ) {
                 categories.forEach { category ->
                     DropdownMenuItem(
-                        text = { Text(category) },
+                        text = { Text("${category.icon} ${category.name}") },
                         onClick = {
-                            selectedCategory = category
+                            selectedCategory = category.name
                             categoryMenuExpanded = false
                         }
                     )
