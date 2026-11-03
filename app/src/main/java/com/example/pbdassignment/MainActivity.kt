@@ -1,4 +1,3 @@
-
 package com.example.pbdassignment
 
 import android.os.Bundle
@@ -46,7 +45,7 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier.padding(innerPadding),
                             initialExpense = expenseToEdit,
 
-                            onSave = { title, amount, categoryName ->
+                            onSave = { title, amount, categoryName, paymentMethod ->
                                 val existingExpense = expenseToEdit
 
                                 if (existingExpense != null) {
@@ -55,7 +54,8 @@ class MainActivity : ComponentActivity() {
                                             title = title,
                                             amount = amount,
                                             categoryId = categoryName.lowercase(),
-                                            categoryName = categoryName
+                                            categoryName = categoryName,
+                                            paymentMethod = paymentMethod
                                         )
                                     )
                                 } else {
@@ -67,7 +67,7 @@ class MainActivity : ComponentActivity() {
                                         categoryName = categoryName,
                                         dateMillis = System.currentTimeMillis(),
                                         isCommitted = false,
-                                        paymentMethod = "Cash"
+                                        paymentMethod = paymentMethod
                                     )
 
                                     expenseViewModel.addExpense(expense)
