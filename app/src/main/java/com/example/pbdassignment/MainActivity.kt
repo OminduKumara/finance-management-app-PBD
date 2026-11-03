@@ -13,7 +13,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.pbdassignment.feature.expense.data.FakeExpenseRepository
+import androidx.room.Room
+import com.example.pbdassignment.feature.expense.data.AppDatabase
+import com.example.pbdassignment.feature.expense.data.RoomExpenseRepository
 import com.example.pbdassignment.feature.expense.presentation.ExpenseListScreen
 import com.example.pbdassignment.feature.expense.presentation.ExpenseViewModel
 import com.example.pbdassignment.feature.expense.presentation.ExpenseViewModelFactory
@@ -27,7 +29,17 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             PbdassignmentTheme {
-                val repository = remember { FakeExpenseRepository() }
+                val database = remember {
+                    Room.databaseBuilder(
+                        applicationContext,
+                        AppDatabase::class.java,
+                        "pbd_database"
+                    ).build()
+                }
+
+                val repository = remember {
+                    RoomExpenseRepository(database.expenseDao())
+                }
 
                 val expenseViewModel: ExpenseViewModel = viewModel(
                     factory = ExpenseViewModelFactory(repository)
