@@ -1,4 +1,3 @@
-
 package com.example.pbdassignment.feature.expense.presentation
 
 import androidx.compose.foundation.layout.Arrangement
@@ -25,7 +24,7 @@ import androidx.compose.ui.unit.dp
 fun QuickAddExpenseScreen(
     modifier: Modifier = Modifier,
     initialExpense: com.example.pbdassignment.feature.expense.domain.Expense? = null,
-    onSave: (title: String, amount: Double, categoryName: String) -> Unit,
+    onSave: (title: String, amount: Double, categoryName: String, paymentMethod: String) -> Unit,
     onCancel: () -> Unit
 ) {
     var title by remember(initialExpense?.id) {
@@ -51,6 +50,22 @@ fun QuickAddExpenseScreen(
     }
 
     var categoryMenuExpanded by remember {
+        mutableStateOf(false)
+    }
+
+    val paymentMethods = listOf(
+        "Cash",
+        "Credit Card",
+        "Debit Card",
+        "Bank Transfer",
+        "Mobile Payment"
+    )
+
+    var selectedPaymentMethod by remember(initialExpense?.id) {
+        mutableStateOf(initialExpense?.paymentMethod ?: "Cash")
+    }
+
+    var paymentMenuExpanded by remember {
         mutableStateOf(false)
     }
 
@@ -115,6 +130,30 @@ fun QuickAddExpenseScreen(
             }
         }
 
+        Column {
+            OutlinedButton(
+                onClick = { paymentMenuExpanded = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Payment Method: $selectedPaymentMethod")
+            }
+
+            DropdownMenu(
+                expanded = paymentMenuExpanded,
+                onDismissRequest = { paymentMenuExpanded = false }
+            ) {
+                paymentMethods.forEach { method ->
+                    DropdownMenuItem(
+                        text = { Text(method) },
+                        onClick = {
+                            selectedPaymentMethod = method
+                            paymentMenuExpanded = false
+                        }
+                    )
+                }
+            }
+        }
+
         if (amountText.isNotBlank() &&
             (amountText.toDoubleOrNull() == null ||
                     amountText.toDoubleOrNull()!! <= 0.0)
@@ -129,7 +168,7 @@ fun QuickAddExpenseScreen(
             onClick = {
                 val amount = amountText.toDoubleOrNull()
                 if (title.isNotBlank() && amount != null && amount > 0) {
-                    onSave(title.trim(), amount, selectedCategory)
+                    onSave(title.trim(), amount, selectedCategory, selectedPaymentMethod)
                 }
             },
             modifier = Modifier.fillMaxWidth(),
