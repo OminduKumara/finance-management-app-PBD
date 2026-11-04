@@ -1,4 +1,4 @@
-﻿package com.example.pbdassignment.feature.income
+package com.example.pbdassignment.feature.income
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -11,12 +11,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -24,6 +26,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -200,7 +203,8 @@ fun IncomeScreen(
                         currencyFormatter = currencyFormatter,
                         onSettleInvoice = { id, sweepToGoal ->
                             viewModel.markInvoiceSettled(id, sweepPercentage = if (sweepToGoal) 50 else 0)
-                        }
+                        },
+                        onDelete = { viewModel.deleteIncome(item.id) }
                     )
                 }
             }
@@ -226,7 +230,8 @@ fun IncomeScreen(
 fun IncomeCard(
     item: IncomeItem,
     currencyFormatter: NumberFormat,
-    onSettleInvoice: (id: String, sweepToGoal: Boolean) -> Unit
+    onSettleInvoice: (id: String, sweepToGoal: Boolean) -> Unit,
+    onDelete: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -253,7 +258,22 @@ fun IncomeCard(
                     )
                 }
 
-                StatusBadge(status = item.invoiceStatus)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    StatusBadge(status = item.invoiceStatus)
+                    IconButton(
+                        onClick = onDelete,
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = "Delete Income",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(10.dp))

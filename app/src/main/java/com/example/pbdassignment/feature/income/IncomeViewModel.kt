@@ -1,4 +1,4 @@
-﻿package com.example.pbdassignment.feature.income
+package com.example.pbdassignment.feature.income
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -80,5 +80,9 @@ class IncomeViewModel : ViewModel() {
             val sweepAmount = (income.lkrAmount * sweepPercentage) / 100.0
             FinanceRepository.allocateToGoal(sweepAmount)
         }
+    }
+
+    fun deleteIncome(id: String) {
+        FinanceRepository.deleteIncome(id)
     }
 }

@@ -1,4 +1,4 @@
-﻿package com.example.pbdassignment.core.firebase
+package com.example.pbdassignment.core.firebase
 
 import android.util.Log
 import com.example.pbdassignment.core.data.FinanceRepository
@@ -223,6 +223,22 @@ object FirebaseManager {
             .collection("expenses").document(expense.id)
             .set(docData)
             .addOnFailureListener { Log.w(TAG, "Sync expense failed: ${it.message}") }
+    }
+
+    fun deleteIncome(id: String) {
+        val uid = auth.currentUser?.uid ?: return
+        firestore.collection("users").document(uid)
+            .collection("incomes").document(id)
+            .delete()
+            .addOnFailureListener { Log.w(TAG, "Delete income failed: ${it.message}") }
+    }
+
+    fun deleteExpense(id: String) {
+        val uid = auth.currentUser?.uid ?: return
+        firestore.collection("users").document(uid)
+            .collection("expenses").document(id)
+            .delete()
+            .addOnFailureListener { Log.w(TAG, "Delete expense failed: ${it.message}") }
     }
 
     fun syncGoal(goal: GoalItem) {
