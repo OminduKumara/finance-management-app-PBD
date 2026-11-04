@@ -1,32 +1,25 @@
 package com.example.pbdassignment.core.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.pbdassignment.core.firebase.FirebaseManager
 import com.example.pbdassignment.feature.authentication.data.AuthRepositoryImpl
 import com.example.pbdassignment.feature.authentication.domain.Login
 import com.example.pbdassignment.feature.authentication.domain.Register
 import com.example.pbdassignment.feature.authentication.presentation.AuthViewModel
 import com.example.pbdassignment.feature.authentication.presentation.LoginScreen
 import com.example.pbdassignment.feature.authentication.presentation.RegisterScreen
-import com.example.pbdassignment.feature.income.data.IncomeRepositoryImpl
-import com.example.pbdassignment.feature.income.presentation.IncomeViewModel
+import com.example.pbdassignment.ui.navigation.MainAppScreen
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: String = Screen.Login.route
+    startDestination: String = if (FirebaseManager.isUserLoggedIn()) Screen.IncomeDashboard.route else Screen.Login.route
 ) {
     // Single shared repository & use-cases
     val authRepository = rememberAuthRepository()
@@ -77,25 +70,9 @@ fun NavGraph(
             )
         }
 
+        // Main App Screen with Bottom Navigation (Dashboard, Income, Expenses, Goals, Analytics, Profile)
         composable(Screen.IncomeDashboard.route) {
-            val incomeRepository = remember { IncomeRepositoryImpl() }
-            val authRepository = remember { AuthRepositoryImpl() }
-            val viewModel: IncomeViewModel = viewModel {
-                IncomeViewModel(incomeRepository, authRepository)
-            }
-            val state by viewModel.uiState.collectAsState()
-
-            //Placeholder
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                if (state.isLoading) {
-                    CircularProgressIndicator()
-                } else {
-                    Text("Income Dashboard")
-                }
-            }
+            MainAppScreen()
         }
     }
 }

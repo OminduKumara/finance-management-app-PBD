@@ -1,4 +1,4 @@
-package com.example.pbdassignment.feature.authentication.presentation
+﻿package com.example.pbdassignment.feature.authentication.presentation
 
 data class AuthUiState(
     val email: String = "",
