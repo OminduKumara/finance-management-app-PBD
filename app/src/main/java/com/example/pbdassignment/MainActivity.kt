@@ -30,6 +30,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.LaunchedEffect
+import com.example.pbdassignment.feature.recurring.data.RoomRecurringExpenseRepository
+import com.example.pbdassignment.feature.recurring.presentation.RecurringExpenseViewModel
+import com.example.pbdassignment.feature.recurring.presentation.RecurringExpenseViewModelFactory
+import com.example.pbdassignment.feature.recurring.presentation.RecurringExpenseListScreen
+import com.example.pbdassignment.feature.recurring.presentation.AddRecurringExpenseScreen
+import com.example.pbdassignment.feature.recurring.data.RecurringExpenseGenerator
+import com.example.pbdassignment.feature.recurring.domain.RecurringExpense
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,8 +50,14 @@ class MainActivity : ComponentActivity() {
                         AppDatabase::class.java,
                         "pbd_database"
                     )
-                        .addMigrations(AppDatabase.MIGRATION_1_2)
+                        .addMigrations(
+                            AppDatabase.MIGRATION_1_2,
+                            AppDatabase.MIGRATION_2_3
+                        )
                         .build()
+                }
+                val recurringExpenseGenerator = remember {
+                    RecurringExpenseGenerator(database)
                 }
 
                 val repository = remember {
@@ -57,6 +70,10 @@ class MainActivity : ComponentActivity() {
                     )
                 }
 
+                val recurringExpenseRepository = remember {
+                    RoomRecurringExpenseRepository(database.recurringExpenseDao())
+                }
+
                 val expenseViewModel: ExpenseViewModel = viewModel(
                     factory = ExpenseViewModelFactory(repository)
                 )
@@ -65,19 +82,54 @@ class MainActivity : ComponentActivity() {
                     factory = CategoryViewModelFactory(categoryRepository)
                 )
 
+                val recurringExpenseViewModel: RecurringExpenseViewModel = viewModel(
+                    factory = RecurringExpenseViewModelFactory(recurringExpenseRepository)
+                )
+
                 LaunchedEffect(Unit) {
                     categoryViewModel.insertDefaultCategories()
                 }
 
+                LaunchedEffect(Unit) {
+                    recurringExpenseGenerator.generateDueExpenses()
+                }
+
                 var showCategoryManagement by remember { mutableStateOf(false) }
                 var showAddExpense by remember { mutableStateOf(false) }
+                var showRecurringExpenses by remember { mutableStateOf(false) }
+                var showAddRecurringExpense by remember { mutableStateOf(false) }
+                var editingRecurringExpense by remember {
+                    mutableStateOf<RecurringExpense?>(null)
+                }
 
                 var expenseToEdit by remember {
                     mutableStateOf<com.example.pbdassignment.feature.expense.domain.Expense?>(null)
                 }
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    if (showAddExpense) {
+                    if (showAddRecurringExpense) {
+                        AddRecurringExpenseScreen(
+
+                            categories = categoryViewModel.categories.collectAsState().value,
+                            onSave = { expense ->
+                                if (editingRecurringExpense == null) {
+                                    recurringExpenseViewModel.addRecurringExpense(expense)
+                                } else {
+                                    recurringExpenseViewModel.updateRecurringExpense(expense)
+                                }
+
+                                editingRecurringExpense = null
+                                showAddRecurringExpense = false
+                            },
+                            onCancel = {
+                                showAddRecurringExpense = false
+                                showRecurringExpenses = true
+                            },
+
+                            existingExpense = editingRecurringExpense
+                        )
+                    }
+                    else if (showAddExpense) {
                         QuickAddExpenseScreen(
                             modifier = Modifier.padding(innerPadding),
                             categories = categoryViewModel.categories.collectAsState().value,
@@ -124,6 +176,24 @@ class MainActivity : ComponentActivity() {
                                 showAddExpense = false
                             }
                         )
+                    } else if (showRecurringExpenses) {
+                        RecurringExpenseListScreen(
+                            expenses = recurringExpenseViewModel.recurringExpenses.collectAsState().value,
+                            onAddClick = {
+                                editingRecurringExpense = null
+                                showAddRecurringExpense = true
+                            },
+                            onEditClick = { expense ->
+                                editingRecurringExpense = expense
+                                showAddRecurringExpense = true
+                            },
+                            onDeleteClick = { id: String ->
+                                recurringExpenseViewModel.deleteRecurringExpense(id)
+                            },
+                            onBack = {
+                                showRecurringExpenses = false
+                            }
+                        )
                     } else if (showCategoryManagement) {
                         CategoryManagementScreen(
                             categories = categoryViewModel.categories.collectAsState().value,
@@ -139,8 +209,17 @@ class MainActivity : ComponentActivity() {
                         )
                     } else {
                         Column(
+
                             modifier = Modifier.padding(innerPadding)
                         ) {
+                            Button(
+                                onClick = {
+                                    showRecurringExpenses = true
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Recurring Expenses")
+                            }
                             Button(
                                 onClick = {
                                     showCategoryManagement = true
