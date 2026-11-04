@@ -2,10 +2,12 @@ package com.example.pbdassignment.core.navigation
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -18,6 +20,8 @@ import com.example.pbdassignment.feature.authentication.domain.Register
 import com.example.pbdassignment.feature.authentication.presentation.AuthViewModel
 import com.example.pbdassignment.feature.authentication.presentation.LoginScreen
 import com.example.pbdassignment.feature.authentication.presentation.RegisterScreen
+import com.example.pbdassignment.feature.income.data.IncomeRepositoryImpl
+import com.example.pbdassignment.feature.income.presentation.IncomeViewModel
 
 @Composable
 fun NavGraph(
@@ -73,13 +77,24 @@ fun NavGraph(
             )
         }
 
-        // Placeholder for Income Dashboard (Built on Day 2 & Day 3)
         composable(Screen.IncomeDashboard.route) {
+            val incomeRepository = remember { IncomeRepositoryImpl() }
+            val authRepository = remember { AuthRepositoryImpl() }
+            val viewModel: IncomeViewModel = viewModel {
+                IncomeViewModel(incomeRepository, authRepository)
+            }
+            val state by viewModel.uiState.collectAsState()
+
+            //Placeholder
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Income Dashboard")
+                if (state.isLoading) {
+                    CircularProgressIndicator()
+                } else {
+                    Text("Income Dashboard")
+                }
             }
         }
     }
