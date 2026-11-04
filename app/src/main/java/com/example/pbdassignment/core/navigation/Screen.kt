@@ -1,4 +1,4 @@
-package com.example.pbdassignment.core.navigation
+﻿package com.example.pbdassignment.core.navigation
 
 sealed class Screen(val route: String) {
     object Login : Screen("login_screen")

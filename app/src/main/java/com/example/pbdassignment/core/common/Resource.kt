@@ -1,4 +1,4 @@
-package com.example.pbdassignment.core.common
+﻿package com.example.pbdassignment.core.common
 
 sealed class Resource<out T> {
     data class Success<out T>(val data: T) : Resource<T>()
