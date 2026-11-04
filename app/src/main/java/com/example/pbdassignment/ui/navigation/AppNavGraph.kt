@@ -1,4 +1,4 @@
-﻿package com.example.pbdassignment.ui.navigation
+package com.example.pbdassignment.ui.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
