@@ -1,7 +1,7 @@
-package com.example.pbd.domain.repository
+﻿package com.example.pbdassignment.domain.repository
 
-import com.example.pbd.core.model.GoalContribution
-import com.example.pbd.core.model.SavingsGoal
+import com.example.pbdassignment.core.model.GoalContribution
+import com.example.pbdassignment.core.model.SavingsGoal
 import kotlinx.coroutines.flow.Flow
 
 /**

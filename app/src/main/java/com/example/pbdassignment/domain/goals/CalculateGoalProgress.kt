@@ -1,4 +1,4 @@
-package com.example.pbd.domain.goals
+﻿package com.example.pbdassignment.domain.goals
 
 import kotlin.math.ceil
 import kotlin.math.round

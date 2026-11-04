@@ -1,7 +1,7 @@
-package com.example.pbd.domain.repository
+﻿package com.example.pbdassignment.domain.repository
 
-import com.example.pbd.core.model.DatePeriod
-import com.example.pbd.core.model.FinancialSnapshot
+import com.example.pbdassignment.core.model.DatePeriod
+import com.example.pbdassignment.core.model.FinancialSnapshot
 import kotlinx.coroutines.flow.Flow
 
 /**

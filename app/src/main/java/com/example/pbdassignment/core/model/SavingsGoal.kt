@@ -1,4 +1,4 @@
-package com.example.pbd.core.model
+﻿package com.example.pbdassignment.core.model
 
 import java.util.UUID
 
