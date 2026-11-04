@@ -1,4 +1,4 @@
-﻿package com.example.pbdassignment.feature.dashboard
+package com.example.pbdassignment.feature.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import java.util.Calendar
 
 data class DashboardUiState(
     val realizedIncomeLkr: Double = 0.0,
@@ -17,7 +18,10 @@ data class DashboardUiState(
     val netCashflowLkr: Double = 0.0,
     val committedExpenseLkr: Double = 0.0,
     val discretionaryExpenseLkr: Double = 0.0,
+    val lifestylePoolLkr: Double = 0.0,
     val safeToSpendDailyLkr: Double = 0.0,
+    val daysRemainingInMonth: Int = 26,
+    val savingsRatePercent: Double = 0.0,
     val goal: GoalItem = GoalItem(),
     val projectedMonthsToGoal: Double = 12.0,
     val committedRatio: Float = 0.5f,
@@ -41,10 +45,19 @@ class DashboardViewModel : ViewModel() {
         val committed = expenses.filter { it.nature == ExpenseNature.COMMITTED }.sumOf { it.amount }
         val discretionary = expenses.filter { it.nature == ExpenseNature.DISCRETIONARY }.sumOf { it.amount }
 
-        // Daily Safe-To-Spend Allowance: (Income - Committed Costs - Required Monthly MacBook Savings) / 30
+        // Calendar days remaining calculation
+        val calendar = Calendar.getInstance()
+        val totalDays = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+        val currentDay = calendar.get(Calendar.DAY_OF_MONTH)
+        val daysRemaining = (totalDays - currentDay + 1).coerceAtLeast(1)
+
+        // Daily Safe-To-Spend Allowance: (Income - Committed Costs - Required Monthly MacBook Savings) / Days Remaining
         val remainingForLifestyle = (realizedIncome - committed - goal.requiredMonthlySavings)
             .coerceAtLeast(0.0)
-        val dailySafeToSpend = remainingForLifestyle / 30.0
+        val dailySafeToSpend = remainingForLifestyle / daysRemaining.toDouble()
+
+        // Savings retention rate
+        val savingsRate = if (realizedIncome > 0) ((netCashflow / realizedIncome) * 100.0).coerceIn(0.0, 100.0) else 0.0
 
         // Runway calculation based on current net monthly savings
         val monthlySavingsVelocity = (realizedIncome - totalExpense).coerceAtLeast(1000.0)
@@ -62,7 +75,10 @@ class DashboardViewModel : ViewModel() {
             netCashflowLkr = netCashflow,
             committedExpenseLkr = committed,
             discretionaryExpenseLkr = discretionary,
+            lifestylePoolLkr = remainingForLifestyle,
             safeToSpendDailyLkr = dailySafeToSpend,
+            daysRemainingInMonth = daysRemaining,
+            savingsRatePercent = savingsRate,
             goal = goal,
             projectedMonthsToGoal = projectedMonths,
             committedRatio = committedFraction,

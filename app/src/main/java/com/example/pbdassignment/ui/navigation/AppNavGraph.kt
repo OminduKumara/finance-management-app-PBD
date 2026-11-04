@@ -68,7 +68,10 @@ fun MainAppScreen() {
         ) {
             composable(Screen.Dashboard.route) {
                 DashboardScreen(
-                    onNavigateToAnalytics = { navController.navigate(AnalyticsRoutes.ANALYTICS) }
+                    onNavigateToAnalytics = { navController.navigate(AnalyticsRoutes.ANALYTICS) },
+                    onNavigateToIncome = { navController.navigate(Screen.Income.route) },
+                    onNavigateToExpenses = { navController.navigate(Screen.Expenses.route) },
+                    onNavigateToGoals = { navController.navigate(Screen.Goals.route) }
                 )
             }
             composable(Screen.Income.route) {
