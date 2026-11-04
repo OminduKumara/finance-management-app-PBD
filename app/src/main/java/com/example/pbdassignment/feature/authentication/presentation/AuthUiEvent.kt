@@ -1,4 +1,4 @@
-package com.example.pbdassignment.feature.authentication.presentation
+﻿package com.example.pbdassignment.feature.authentication.presentation
 
 sealed class AuthUiEvent {
     data class OnEmailChanged(val email: String) : AuthUiEvent()

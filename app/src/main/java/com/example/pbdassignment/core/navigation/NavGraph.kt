@@ -1,28 +1,25 @@
 package com.example.pbdassignment.core.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.pbdassignment.core.firebase.FirebaseManager
 import com.example.pbdassignment.feature.authentication.data.AuthRepositoryImpl
 import com.example.pbdassignment.feature.authentication.domain.Login
 import com.example.pbdassignment.feature.authentication.domain.Register
 import com.example.pbdassignment.feature.authentication.presentation.AuthViewModel
 import com.example.pbdassignment.feature.authentication.presentation.LoginScreen
 import com.example.pbdassignment.feature.authentication.presentation.RegisterScreen
+import com.example.pbdassignment.ui.navigation.MainAppScreen
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: String = Screen.Login.route
+    startDestination: String = if (FirebaseManager.isUserLoggedIn()) Screen.IncomeDashboard.route else Screen.Login.route
 ) {
     // Single shared repository & use-cases
     val authRepository = rememberAuthRepository()
@@ -73,14 +70,9 @@ fun NavGraph(
             )
         }
 
-        // Placeholder for Income Dashboard (Built on Day 2 & Day 3)
+        // Main App Screen with Bottom Navigation (Dashboard, Income, Expenses, Goals, Analytics, Profile)
         composable(Screen.IncomeDashboard.route) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("Income Dashboard")
-            }
+            MainAppScreen()
         }
     }
 }
