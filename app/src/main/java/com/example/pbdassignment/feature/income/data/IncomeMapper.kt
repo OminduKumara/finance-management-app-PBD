@@ -1,5 +1,6 @@
 package com.example.pbdassignment.feature.income.data
 
+import com.example.pbdassignment.feature.income.domain.CryptoTradeRecord
 import com.example.pbdassignment.feature.income.domain.CurrencyType
 import com.example.pbdassignment.feature.income.domain.IncomeRecord
 import com.example.pbdassignment.feature.income.domain.IncomeSource
@@ -9,8 +10,8 @@ fun IncomeDto.toDomain(): IncomeRecord = IncomeRecord(
         id = id,
         userId = userId,
         title = title,
-        source = IncomeSource.valueOf(source),
-        currency = CurrencyType.valueOf(currency),
+        source = IncomeSource.entries.firstOrNull { it.name == source } ?: IncomeSource.SALARY,
+        currency = CurrencyType.entries.firstOrNull { it.name == currency } ?: CurrencyType.LKR,
         originalAmount = originalAmount,
         exchangeRate = exchangeRate,
         convertedAmountLkr = convertedAmountLkr,
@@ -20,7 +21,7 @@ fun IncomeDto.toDomain(): IncomeRecord = IncomeRecord(
         bonusLkr = bonusLkr,
         clientName = clientName,
         invoiceNumber = invoiceNumber,
-        milestoneStatus = milestoneStatus?.let { MilestoneStatus.valueOf(it) },
+        milestoneStatus = MilestoneStatus.entries.firstOrNull { it.name == milestoneStatus },
         linkedCryptoTradeId = linkedCryptoTradeId
 )
 
@@ -41,4 +42,32 @@ fun IncomeRecord.toDto(): IncomeDto = IncomeDto(
         invoiceNumber = invoiceNumber,
         milestoneStatus = milestoneStatus?.name,
         linkedCryptoTradeId = linkedCryptoTradeId
+)
+
+fun CryptoTradeDto.toDomain(): CryptoTradeRecord = CryptoTradeRecord(
+        id = id,
+        userId = userId,
+        assetSymbol = assetSymbol,
+        buyPriceUsd = buyPriceUsd,
+        sellPriceUsd = sellPriceUsd,
+        quantity = quantity,
+        realisedPnLUsd = realisedPnLUsd,
+        realisedPnLLkr = realisedPnLLkr,
+        exchangeRateLkr = exchangeRateLkr,
+        dateTimestamp = dateTimestamp,
+        exchange = exchange
+)
+
+fun CryptoTradeRecord.toDto(): CryptoTradeDto = CryptoTradeDto(
+        id = id,
+        userId = userId,
+        assetSymbol = assetSymbol,
+        buyPriceUsd = buyPriceUsd,
+        sellPriceUsd = sellPriceUsd,
+        quantity = quantity,
+        realisedPnLUsd = realisedPnLUsd,
+        realisedPnLLkr = realisedPnLLkr,
+        exchangeRateLkr = exchangeRateLkr,
+        dateTimestamp = dateTimestamp,
+        exchange = exchange
 )
