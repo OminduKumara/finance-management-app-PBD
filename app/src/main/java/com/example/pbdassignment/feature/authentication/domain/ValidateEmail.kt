@@ -1,4 +1,4 @@
-package com.example.pbdassignment.feature.authentication.domain
+﻿package com.example.pbdassignment.feature.authentication.domain
 
 class ValidateEmail {
     private val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\$".toRegex()
