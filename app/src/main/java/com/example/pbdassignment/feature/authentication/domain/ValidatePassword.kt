@@ -1,4 +1,4 @@
-package com.example.pbdassignment.feature.authentication.domain
+﻿package com.example.pbdassignment.feature.authentication.domain
 
 class ValidatePassword {
     operator fun invoke(password: String): ValidationResult {
