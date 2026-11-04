@@ -1,4 +1,4 @@
-﻿package com.example.pbdassignment.core.data
+package com.example.pbdassignment.core.data
 
 import com.example.pbdassignment.core.model.DefaultExpenseCategories
 import com.example.pbdassignment.core.model.ExpenseItem
@@ -139,6 +139,11 @@ object FinanceRepository {
         }
     }
 
+    fun deleteIncome(id: String) {
+        _incomes.update { list -> list.filterNot { it.id == id } }
+        com.example.pbdassignment.core.firebase.FirebaseManager.deleteIncome(id)
+    }
+
     // --- Expense Methods ---
     fun addExpense(expense: ExpenseItem) {
         _expenses.update { current ->
@@ -149,6 +154,7 @@ object FinanceRepository {
 
     fun deleteExpense(id: String) {
         _expenses.update { list -> list.filterNot { it.id == id } }
+        com.example.pbdassignment.core.firebase.FirebaseManager.deleteExpense(id)
     }
 
     // --- Goal Methods ---
