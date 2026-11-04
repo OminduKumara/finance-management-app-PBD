@@ -22,5 +22,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "pbd"
+rootProject.name = "pbdassignment"
 include(":app")
+ 
