@@ -19,7 +19,7 @@ import com.example.pbdassignment.ui.navigation.MainAppScreen
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: String = if (FirebaseManager.isUserLoggedIn()) Screen.IncomeDashboard.route else Screen.Login.route
+    startDestination: String = Screen.Login.route
 ) {
     // Single shared repository & use-cases
     val authRepository = rememberAuthRepository()
