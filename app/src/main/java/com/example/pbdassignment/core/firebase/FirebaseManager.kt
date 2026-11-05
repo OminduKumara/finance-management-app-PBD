@@ -50,11 +50,29 @@ object FirebaseManager {
             val user = firebaseAuth.currentUser
             _currentUser.value = user
             if (user != null) {
+                ensureUserDocument(user)
                 attachRealtimeListeners(user.uid)
             } else {
                 detachListeners()
             }
         }
+    }
+
+    fun ensureUserDocument(user: FirebaseUser) {
+        val name = user.displayName?.takeIf { it.isNotBlank() }
+            ?: user.email?.substringBefore('@')?.replaceFirstChar { it.uppercase() }
+            ?: "User"
+        val data = mapOf(
+            "uid" to user.uid,
+            "userId" to user.uid,
+            "email" to (user.email ?: ""),
+            "displayName" to name,
+            "name" to name,
+            "updatedAt" to System.currentTimeMillis()
+        )
+        firestore.collection("users").document(user.uid)
+            .set(data, com.google.firebase.firestore.SetOptions.merge())
+            .addOnFailureListener { Log.w(TAG, "Ensure user document failed: ${it.message}") }
     }
 
     fun isUserLoggedIn(): Boolean = auth.currentUser != null
@@ -180,16 +198,25 @@ object FirebaseManager {
                 if (snapshot != null && !snapshot.isEmpty) {
                     val remoteIncomes = snapshot.documents.mapNotNull { doc ->
                         try {
+                            val raw = doc.getDouble("originalAmount") ?: doc.getDouble("rawAmount") ?: 0.0
+                            val rate = doc.getDouble("exchangeRate") ?: 1.0
+                            val lkr = doc.getDouble("convertedAmountLkr") ?: doc.getDouble("lkrAmount") ?: (raw * rate)
+                            val invStatusStr = doc.getString("invoiceStatus") ?: "RECEIVED"
+                            val parsedStatus = try {
+                                InvoiceStatus.valueOf(invStatusStr)
+                            } catch (_: Exception) {
+                                InvoiceStatus.RECEIVED
+                            }
                             IncomeItem(
                                 id = doc.getString("id") ?: doc.id,
-                                streamType = doc.getString("streamType") ?: IncomeStreams.SALARY,
+                                streamType = doc.getString("source") ?: doc.getString("streamType") ?: IncomeStreams.SALARY,
                                 title = doc.getString("title") ?: "",
-                                clientOrSource = doc.getString("clientOrSource") ?: "",
-                                rawAmount = doc.getDouble("rawAmount") ?: 0.0,
+                                clientOrSource = doc.getString("clientName") ?: doc.getString("clientOrSource") ?: "",
+                                rawAmount = raw,
                                 currency = doc.getString("currency") ?: "LKR",
-                                exchangeRate = doc.getDouble("exchangeRate") ?: 1.0,
-                                lkrAmount = doc.getDouble("lkrAmount") ?: 0.0,
-                                invoiceStatus = InvoiceStatus.valueOf(doc.getString("invoiceStatus") ?: "RECEIVED")
+                                exchangeRate = rate,
+                                lkrAmount = lkr,
+                                invoiceStatus = parsedStatus
                             )
                         } catch (e: Exception) {
                             null
@@ -284,22 +311,36 @@ object FirebaseManager {
 
     fun syncIncome(income: IncomeItem) {
         val uid = auth.currentUser?.uid ?: return
+        val raw = if (income.rawAmount > 0) income.rawAmount else 1.0
+        val lkr = if (income.lkrAmount > 0) income.lkrAmount else (raw * income.exchangeRate)
+        val sourceStr = when (income.streamType.uppercase()) {
+            "SALARY" -> "SALARY"
+            "FREELANCE" -> "FREELANCE"
+            "ADSENSE", "ADSENSE (USD)" -> "ADSENSE"
+            "CRYPTO", "CRYPTO P&L" -> "CRYPTO"
+            else -> "SALARY"
+        }
         val docData = hashMapOf(
             "id" to income.id,
             "userId" to uid,
             "streamType" to income.streamType,
-            "title" to income.title,
+            "source" to sourceStr,
+            "title" to income.title.ifBlank { "Income" },
             "clientOrSource" to income.clientOrSource,
-            "rawAmount" to income.rawAmount,
+            "clientName" to income.clientOrSource,
+            "rawAmount" to raw,
+            "originalAmount" to raw,
             "currency" to income.currency,
             "exchangeRate" to income.exchangeRate,
-            "lkrAmount" to income.lkrAmount,
+            "lkrAmount" to lkr,
+            "convertedAmountLkr" to lkr,
             "invoiceStatus" to income.invoiceStatus.name,
-            "date" to income.date
+            "date" to income.date,
+            "dateTimestamp" to System.currentTimeMillis()
         )
         firestore.collection("users").document(uid)
             .collection("incomes").document(income.id)
-            .set(docData)
+            .set(docData, com.google.firebase.firestore.SetOptions.merge())
             .addOnFailureListener { Log.w(TAG, "Sync income failed: ${it.message}") }
     }
 

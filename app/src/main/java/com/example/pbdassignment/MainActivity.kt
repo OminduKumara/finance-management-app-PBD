@@ -5,6 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
@@ -55,12 +57,13 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                LaunchedEffect(Unit) {
-                    categoryViewModel.insertDefaultCategories()
-                }
+                val currentUser by com.example.pbdassignment.core.firebase.FirebaseManager.currentUser.collectAsState()
 
-                LaunchedEffect(Unit) {
-                    recurringExpenseGenerator.generateDueExpenses()
+                LaunchedEffect(currentUser) {
+                    if (currentUser != null) {
+                        categoryViewModel.insertDefaultCategories()
+                        recurringExpenseGenerator.generateDueExpenses()
+                    }
                 }
 
                 LaunchedEffect(Unit) {
