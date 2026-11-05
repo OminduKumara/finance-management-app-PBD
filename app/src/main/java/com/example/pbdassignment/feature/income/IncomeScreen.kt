@@ -258,22 +258,7 @@ fun IncomeCard(
                     )
                 }
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    StatusBadge(status = item.invoiceStatus)
-                    IconButton(
-                        onClick = onDelete,
-                        modifier = Modifier.size(36.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = "Delete Income",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                        )
-                    }
-                }
+                StatusBadge(status = item.invoiceStatus)
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -281,7 +266,7 @@ fun IncomeCard(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
                     if (item.currency == "USD") {
@@ -299,13 +284,26 @@ fun IncomeCard(
                     )
                 }
 
-                if (item.invoiceStatus == InvoiceStatus.OVERDUE || item.invoiceStatus == InvoiceStatus.INVOICED_PENDING) {
-                    OutlinedButton(
-                        onClick = { onSettleInvoice(item.id, true) },
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = IncomeGreen)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (item.invoiceStatus == InvoiceStatus.OVERDUE || item.invoiceStatus == InvoiceStatus.INVOICED_PENDING) {
+                        OutlinedButton(
+                            onClick = { onSettleInvoice(item.id, true) },
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = IncomeGreen),
+                            modifier = Modifier.padding(end = 4.dp)
+                        ) {
+                            Text("Settle & Sweep 50%", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    IconButton(
+                        onClick = onDelete
                     ) {
-                        Text("Settle & Sweep 50%", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = "Delete Income",
+                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
+                        )
                     }
                 }
             }
