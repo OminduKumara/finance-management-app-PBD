@@ -14,13 +14,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -40,9 +48,11 @@ import com.example.pbdassignment.ui.theme.IncomeGreen
 import java.text.NumberFormat
 import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnalyticsScreen(
-    viewModel: AnalyticsViewModel = viewModel()
+    viewModel: AnalyticsViewModel = viewModel(),
+    onNavigateBack: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -53,54 +63,71 @@ fun AnalyticsScreen(
         }
     }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        item {
-            Spacer(modifier = Modifier.height(6.dp))
-            Column {
-                Text(
-                    text = "Financial Analytics",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "Cashflow distributions, category splits & income stability",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        // Time Period Filter Chips
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                uiState.availablePeriods.forEach { period ->
-                    FilterChip(
-                        selected = uiState.selectedPeriod.label == period.label,
-                        onClick = { viewModel.selectPeriod(period) },
-                        label = { Text(period.label) },
-                        shape = RoundedCornerShape(10.dp),
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = BrandPrimary.copy(alpha = 0.12f),
-                            selectedLabelColor = BrandPrimary
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            TopAppBar(
+                title = {
+                    Column {
+                        Text(
+                            text = "Financial Analytics",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
-                    )
+                        Text(
+                            text = "Cashflow distributions, splits & ratios",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
+            )
+        }
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Time Period Filter Chips
+            item {
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    uiState.availablePeriods.forEach { period ->
+                        FilterChip(
+                            selected = uiState.selectedPeriod.label == period.label,
+                            onClick = { viewModel.selectPeriod(period) },
+                            label = { Text(period.label) },
+                            shape = RoundedCornerShape(10.dp),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = BrandPrimary.copy(alpha = 0.12f),
+                                selectedLabelColor = BrandPrimary
+                            )
+                        )
+                    }
                 }
             }
-        }
 
-        if (uiState.isLoading) {
+            if (uiState.isLoading) {
             item {
                 Box(
                     modifier = Modifier
@@ -215,4 +242,5 @@ fun AnalyticsScreen(
             Spacer(modifier = Modifier.height(80.dp))
         }
     }
+}
 }

@@ -43,34 +43,38 @@ fun MainAppScreen(
         Screen.Profile
     )
 
+    val isTopLevelRoute = currentRoute in navigationItems.map { it.route }
+
     Scaffold(
         bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                tonalElevation = 0.dp
-            ) {
-                navigationItems.forEach { screen ->
-                    NavigationBarItem(
-                        icon = { Icon(screen.icon, contentDescription = screen.title) },
-                        label = { Text(screen.title, style = MaterialTheme.typography.labelSmall) },
-                        selected = currentRoute == screen.route,
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = BrandPrimary,
-                            selectedTextColor = BrandPrimary,
-                            indicatorColor = BrandPrimary.copy(alpha = 0.12f),
-                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        onClick = {
-                            navController.navigate(screen.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+            if (isTopLevelRoute) {
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 0.dp
+                ) {
+                    navigationItems.forEach { screen ->
+                        NavigationBarItem(
+                            icon = { Icon(screen.icon, contentDescription = screen.title) },
+                            label = { Text(screen.title, style = MaterialTheme.typography.labelSmall) },
+                            selected = currentRoute == screen.route,
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = BrandPrimary,
+                                selectedTextColor = BrandPrimary,
+                                indicatorColor = BrandPrimary.copy(alpha = 0.12f),
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            onClick = {
+                                navController.navigate(screen.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
         }
@@ -113,7 +117,9 @@ fun MainAppScreen(
                 )
             }
             composable(AnalyticsRoutes.ANALYTICS) {
-                AnalyticsScreen()
+                AnalyticsScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
             composable(Screen.Profile.route) {
                 ProfileScreen(onSignOut = onSignOut)
