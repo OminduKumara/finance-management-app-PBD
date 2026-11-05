@@ -99,6 +99,7 @@ fun ExpenseScreen() {
     LaunchedEffect(expenses) {
         if (expenses.isNotEmpty()) {
             expenses.forEach { expense ->
+                com.example.pbdassignment.core.firebase.FirebaseManager.syncExpense(expense)
                 FinanceRepository.addExpense(
                     ExpenseItem(
                         id = expense.id,
@@ -114,6 +115,22 @@ fun ExpenseScreen() {
                         notes = expense.title
                     )
                 )
+            }
+        }
+    }
+
+    LaunchedEffect(categories) {
+        if (categories.isNotEmpty()) {
+            categories.forEach { category ->
+                com.example.pbdassignment.core.firebase.FirebaseManager.syncCategory(category)
+            }
+        }
+    }
+
+    LaunchedEffect(recurringExpenses) {
+        if (recurringExpenses.isNotEmpty()) {
+            recurringExpenses.forEach { recurring ->
+                com.example.pbdassignment.core.firebase.FirebaseManager.syncRecurringExpense(recurring)
             }
         }
     }

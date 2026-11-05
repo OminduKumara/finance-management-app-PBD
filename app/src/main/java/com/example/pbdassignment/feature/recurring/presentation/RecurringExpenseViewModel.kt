@@ -22,18 +22,21 @@ class RecurringExpenseViewModel(
     fun addRecurringExpense(expense: RecurringExpense) {
         viewModelScope.launch {
             repository.addRecurringExpense(expense)
+            com.example.pbdassignment.core.firebase.FirebaseManager.syncRecurringExpense(expense)
         }
     }
 
     fun updateRecurringExpense(expense: RecurringExpense) {
         viewModelScope.launch {
             repository.updateRecurringExpense(expense)
+            com.example.pbdassignment.core.firebase.FirebaseManager.syncRecurringExpense(expense)
         }
     }
 
     fun deleteRecurringExpense(id: String) {
         viewModelScope.launch {
             repository.deleteRecurringExpense(id)
+            com.example.pbdassignment.core.firebase.FirebaseManager.deleteRecurringExpense(id)
         }
     }
 }
