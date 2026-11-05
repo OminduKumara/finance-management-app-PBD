@@ -1,12 +1,48 @@
 package com.example.pbdassignment.feature.recurring.presentation
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.pbdassignment.feature.category.domain.Category
 import com.example.pbdassignment.feature.recurring.domain.RecurrenceFrequency
 import com.example.pbdassignment.feature.recurring.domain.RecurringExpense
@@ -29,12 +65,12 @@ fun AddRecurringExpenseScreen(
 
     var selectedCategory by remember(existingExpense, categories) {
         mutableStateOf(
-            existingExpense?.categoryName ?: categories.firstOrNull()?.name ?: ""
+            existingExpense?.categoryName ?: categories.firstOrNull()?.name ?: "General"
         )
     }
 
     var selectedPaymentMethod by remember(existingExpense) {
-        mutableStateOf(existingExpense?.paymentMethod ?: "Cash")
+        mutableStateOf(existingExpense?.paymentMethod ?: "Credit Card")
     }
 
     var selectedFrequency by remember(existingExpense) {
@@ -52,203 +88,330 @@ fun AddRecurringExpenseScreen(
     var categoryExpanded by remember { mutableStateOf(false) }
     var paymentExpanded by remember { mutableStateOf(false) }
     var frequencyExpanded by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf("") }
 
     val paymentMethods = listOf(
-        "Cash",
         "Credit Card",
         "Debit Card",
+        "Cash",
         "Bank Transfer",
-        "Mobile Payment"
+        "Other"
     )
+
+    val parsedAmount = amount.toDoubleOrNull()
+    val isFormValid = title.isNotBlank() && parsedAmount != null && parsedAmount > 0
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color(0xFFF9FAFB))
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            text = if (existingExpense == null) {
-                "Add Recurring Expense"
-            } else {
-                "Edit Recurring Expense"
-            },
-            style = MaterialTheme.typography.headlineSmall
-        )
-
-        OutlinedTextField(
-            value = title,
-            onValueChange = { title = it },
-            label = { Text("Expense Title") },
+        // Simple Top Bar
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = if (existingExpense == null) "New Recurring Expense" else "Edit Recurring Expense",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF111827),
+                fontSize = 20.sp
+            )
 
-        OutlinedTextField(
-            value = amount,
-            onValueChange = { amount = it },
-            label = { Text("Amount (LKR)") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-
-        // Category dropdown
-        Box {
-            OutlinedButton(
-                onClick = { categoryExpanded = true },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    if (selectedCategory.isBlank()) {
-                        "Select Category"
-                    } else {
-                        "Category: $selectedCategory"
-                    }
+            IconButton(onClick = onCancel) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close",
+                    tint = Color(0xFF4B5563)
                 )
             }
+        }
 
-            DropdownMenu(
-                expanded = categoryExpanded,
-                onDismissRequest = { categoryExpanded = false }
+        // Form Fields in Clean Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            border = BorderStroke(1.dp, Color(0xFFE5E7EB)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                categories.forEach { category ->
-                    DropdownMenuItem(
-                        text = { Text("${category.icon} ${category.name}") },
-                        onClick = {
-                            selectedCategory = category.name
-                            categoryExpanded = false
-                        }
+                // Title
+                Column {
+                    Text(
+                        text = "Title",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF374151),
+                        fontSize = 13.sp
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    OutlinedTextField(
+                        value = title,
+                        onValueChange = { title = it },
+                        placeholder = { Text("e.g. Apartment Rent, Internet, Gym", color = Color(0xFF9CA3AF), fontSize = 14.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color(0xFFD1D5DB),
+                            focusedBorderColor = Color(0xFF111827)
+                        )
                     )
                 }
-            }
-        }
 
-        // Payment method dropdown
-        Box {
-            OutlinedButton(
-                onClick = { paymentExpanded = true },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Payment: $selectedPaymentMethod")
-            }
-
-            DropdownMenu(
-                expanded = paymentExpanded,
-                onDismissRequest = { paymentExpanded = false }
-            ) {
-                paymentMethods.forEach { method ->
-                    DropdownMenuItem(
-                        text = { Text(method) },
-                        onClick = {
-                            selectedPaymentMethod = method
-                            paymentExpanded = false
-                        }
+                // Amount
+                Column {
+                    Text(
+                        text = "Amount (LKR)",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF374151),
+                        fontSize = 13.sp
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    OutlinedTextField(
+                        value = amount,
+                        onValueChange = { amount = it },
+                        placeholder = { Text("0.00", color = Color(0xFF9CA3AF), fontSize = 14.sp) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color(0xFFD1D5DB),
+                            focusedBorderColor = Color(0xFF111827)
+                        )
                     )
                 }
-            }
-        }
 
-        // Frequency dropdown
-        Box {
-            OutlinedButton(
-                onClick = { frequencyExpanded = true },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Frequency: ${selectedFrequency.displayName}")
-            }
-
-            DropdownMenu(
-                expanded = frequencyExpanded,
-                onDismissRequest = { frequencyExpanded = false }
-            ) {
-                RecurrenceFrequency.entries.forEach { frequency ->
-                    DropdownMenuItem(
-                        text = { Text(frequency.displayName) },
-                        onClick = {
-                            selectedFrequency = frequency
-                            frequencyExpanded = false
-                        }
+                // Frequency Dropdown
+                Column {
+                    Text(
+                        text = "Billing Frequency",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF374151),
+                        fontSize = 13.sp
                     )
-                }
-            }
-        }
-
-        OutlinedTextField(
-            value = notes,
-            onValueChange = { notes = it },
-            label = { Text("Notes (Optional)") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        if (errorMessage.isNotBlank()) {
-            Text(
-                text = errorMessage,
-                color = MaterialTheme.colorScheme.error
-            )
-        }
-
-        Button(
-            onClick = {
-                val parsedAmount = amount.toDoubleOrNull()
-
-                when {
-                    title.isBlank() ->
-                        errorMessage = "Please enter an expense title."
-
-                    parsedAmount == null || !parsedAmount.isFinite() || parsedAmount <= 0 ->
-                        errorMessage = "Please enter a valid amount."
-
-                    selectedCategory.isBlank() ->
-                        errorMessage = "Please select a category."
-
-                    else -> {
-                        val category = categories.firstOrNull {
-                            it.name == selectedCategory
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Box {
+                        OutlinedButton(
+                            onClick = { frequencyExpanded = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, Color(0xFFD1D5DB)),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF111827))
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(selectedFrequency.displayName, fontSize = 14.sp)
+                                Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = Color(0xFF6B7280))
+                            }
                         }
 
-                        if (category == null) {
-                            errorMessage = "Please select a valid category."
-                        } else {
-                            onSave(
-                                RecurringExpense(
-                                    id = existingExpense?.id ?: UUID.randomUUID().toString(),
-                                    title = title.trim(),
-                                    amount = parsedAmount,
-                                    currencyCode = existingExpense?.currencyCode ?: "LKR",
-                                    categoryId = category.id,
-                                    categoryName = category.name,
-                                    paymentMethod = selectedPaymentMethod,
-                                    frequency = selectedFrequency.name,
-                                    startDateMillis = existingExpense?.startDateMillis
-                                        ?: System.currentTimeMillis(),
-                                    endDateMillis = existingExpense?.endDateMillis,
-                                    isActive = existingExpense?.isActive ?: true,
-                                    notes = notes.trim(),
-                                    lastGeneratedDateMillis = existingExpense?.lastGeneratedDateMillis
+                        DropdownMenu(
+                            expanded = frequencyExpanded,
+                            onDismissRequest = { frequencyExpanded = false }
+                        ) {
+                            RecurrenceFrequency.entries.forEach { freq ->
+                                DropdownMenuItem(
+                                    text = { Text(freq.displayName, fontSize = 14.sp) },
+                                    onClick = {
+                                        selectedFrequency = freq
+                                        frequencyExpanded = false
+                                    }
                                 )
-                            )
+                            }
                         }
                     }
                 }
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(
-                if (existingExpense == null) {
-                    "Save Recurring Expense"
-                } else {
-                    "Update Recurring Expense"
+
+                // Category Dropdown
+                Column {
+                    Text(
+                        text = "Category",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF374151),
+                        fontSize = 13.sp
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Box {
+                        OutlinedButton(
+                            onClick = { categoryExpanded = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, Color(0xFFD1D5DB)),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF111827))
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(selectedCategory, fontSize = 14.sp)
+                                Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = Color(0xFF6B7280))
+                            }
+                        }
+
+                        DropdownMenu(
+                            expanded = categoryExpanded,
+                            onDismissRequest = { categoryExpanded = false }
+                        ) {
+                            categories.forEach { category ->
+                                DropdownMenuItem(
+                                    text = { Text(category.name, fontSize = 14.sp) },
+                                    onClick = {
+                                        selectedCategory = category.name
+                                        categoryExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
                 }
-            )
+
+                // Payment Method Dropdown
+                Column {
+                    Text(
+                        text = "Payment Method",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF374151),
+                        fontSize = 13.sp
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Box {
+                        OutlinedButton(
+                            onClick = { paymentExpanded = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, Color(0xFFD1D5DB)),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF111827))
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(selectedPaymentMethod, fontSize = 14.sp)
+                                Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = Color(0xFF6B7280))
+                            }
+                        }
+
+                        DropdownMenu(
+                            expanded = paymentExpanded,
+                            onDismissRequest = { paymentExpanded = false }
+                        ) {
+                            paymentMethods.forEach { method ->
+                                DropdownMenuItem(
+                                    text = { Text(method, fontSize = 14.sp) },
+                                    onClick = {
+                                        selectedPaymentMethod = method
+                                        paymentExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Notes Field
+                Column {
+                    Text(
+                        text = "Notes (Optional)",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF374151),
+                        fontSize = 13.sp
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    OutlinedTextField(
+                        value = notes,
+                        onValueChange = { notes = it },
+                        placeholder = { Text("Additional notes", color = Color(0xFF9CA3AF), fontSize = 14.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color(0xFFD1D5DB),
+                            focusedBorderColor = Color(0xFF111827)
+                        )
+                    )
+                }
+            }
         }
 
-        OutlinedButton(
-            onClick = onCancel,
-            modifier = Modifier.fillMaxWidth()
+        // Action Buttons
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Text("Cancel")
+            OutlinedButton(
+                onClick = onCancel,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(48.dp),
+                shape = RoundedCornerShape(8.dp),
+                border = BorderStroke(1.dp, Color(0xFFD1D5DB)),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF374151))
+            ) {
+                Text("Cancel", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+            }
+
+            Button(
+                onClick = {
+                    if (parsedAmount != null) {
+                        val category = categories.firstOrNull { it.name == selectedCategory }
+                        val categoryId = category?.id ?: selectedCategory.lowercase()
+                        onSave(
+                            RecurringExpense(
+                                id = existingExpense?.id ?: UUID.randomUUID().toString(),
+                                title = title.trim(),
+                                amount = parsedAmount,
+                                currencyCode = existingExpense?.currencyCode ?: "LKR",
+                                categoryId = categoryId,
+                                categoryName = selectedCategory,
+                                paymentMethod = selectedPaymentMethod,
+                                frequency = selectedFrequency.name,
+                                startDateMillis = existingExpense?.startDateMillis ?: System.currentTimeMillis(),
+                                endDateMillis = existingExpense?.endDateMillis,
+                                isActive = existingExpense?.isActive ?: true,
+                                notes = notes.trim(),
+                                lastGeneratedDateMillis = existingExpense?.lastGeneratedDateMillis
+                            )
+                        )
+                    }
+                },
+                enabled = isFormValid,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(48.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF111827),
+                    disabledContainerColor = Color(0xFFE5E7EB)
+                )
+            ) {
+                Text(
+                    text = if (existingExpense == null) "Save" else "Update",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = if (isFormValid) Color.White else Color(0xFF9CA3AF)
+                )
+            }
         }
     }
 }
