@@ -11,8 +11,12 @@ class IncomeViewModelFactory(
     private val incomeRepository: IncomeRepository = IncomeRepositoryImpl(),
     private val authRepository: AuthRepository = AuthRepositoryImpl()
 ) : ViewModelProvider.Factory {
+
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return IncomeViewModel(incomeRepository, authRepository) as T
+        if (modelClass.isAssignableFrom(IncomeViewModel::class.java)) {
+            return IncomeViewModel(incomeRepository, authRepository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }
 }
