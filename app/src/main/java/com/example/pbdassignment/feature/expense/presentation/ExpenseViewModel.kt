@@ -28,6 +28,7 @@ class ExpenseViewModel(
     fun addExpense(expense: Expense) {
         viewModelScope.launch {
             repository.addExpense(expense)
+            com.example.pbdassignment.core.firebase.FirebaseManager.syncExpense(expense)
             syncToFinanceRepository(expense)
         }
     }
@@ -35,6 +36,7 @@ class ExpenseViewModel(
     fun deleteExpense(id: String) {
         viewModelScope.launch {
             repository.deleteExpense(id)
+            com.example.pbdassignment.core.firebase.FirebaseManager.deleteExpense(id)
             FinanceRepository.deleteExpense(id)
         }
     }
@@ -42,6 +44,7 @@ class ExpenseViewModel(
     fun updateExpense(expense: Expense) {
         viewModelScope.launch {
             repository.updateExpense(expense)
+            com.example.pbdassignment.core.firebase.FirebaseManager.syncExpense(expense)
             FinanceRepository.deleteExpense(expense.id)
             syncToFinanceRepository(expense)
         }

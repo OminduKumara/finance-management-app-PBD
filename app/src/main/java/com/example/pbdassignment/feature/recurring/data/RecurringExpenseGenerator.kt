@@ -54,6 +54,21 @@ class RecurringExpenseGenerator(
                         )
                     )
 
+                    com.example.pbdassignment.core.firebase.FirebaseManager.syncExpense(
+                        com.example.pbdassignment.feature.expense.domain.Expense(
+                            id = expenseId,
+                            title = recurring.title,
+                            amount = recurring.amount,
+                            currencyCode = recurring.currencyCode,
+                            categoryId = recurring.categoryId,
+                            categoryName = recurring.categoryName,
+                            dateMillis = nextDate,
+                            isCommitted = true,
+                            paymentMethod = recurring.paymentMethod,
+                            notes = recurring.notes
+                        )
+                    )
+
                     com.example.pbdassignment.core.data.FinanceRepository.addExpense(
                         com.example.pbdassignment.core.model.ExpenseItem(
                             id = expenseId,
