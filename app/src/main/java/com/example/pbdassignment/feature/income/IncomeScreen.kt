@@ -1,5 +1,6 @@
 package com.example.pbdassignment.feature.income
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -12,9 +13,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -24,12 +27,14 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -43,13 +48,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pbdassignment.core.model.IncomeItem
 import com.example.pbdassignment.core.model.InvoiceStatus
 import com.example.pbdassignment.feature.income.components.AddIncomeDialog
+import com.example.pbdassignment.ui.theme.BrandPrimary
 import com.example.pbdassignment.ui.theme.CryptoPurple
+import com.example.pbdassignment.ui.theme.ExpenseRed
 import com.example.pbdassignment.ui.theme.IncomeGreen
-import com.example.pbdassignment.ui.theme.OverdueRed
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -68,10 +75,12 @@ fun IncomeScreen(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddDialog = true },
-                containerColor = MaterialTheme.colorScheme.primary,
+                containerColor = BrandPrimary,
+                contentColor = Color.White,
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Income")
@@ -89,75 +98,67 @@ fun IncomeScreen(
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = "Income & Inflows",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.ExtraBold
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = "Salary, Freelance, USD AdSense & Crypto",
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = "Salary, freelance clients, USD AdSense & crypto earnings",
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            // Summary Metrics Row
+            // Summary Metrics Card
             item {
-                Row(
+                Card(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
-                    Card(
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(18.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Received", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Column {
+                            Text(
+                                text = "Realized Total",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "LKR ${currencyFormatter.format(uiState.totalRealizedLkr)}",
+                                text = "+LKR ${currencyFormatter.format(uiState.totalRealizedLkr)}",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.ExtraBold,
                                 color = IncomeGreen
                             )
                         }
-                    }
 
-                    Card(
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (uiState.overdueInvoicesCount > 0)
-                                MaterialTheme.colorScheme.errorContainer
-                            else MaterialTheme.colorScheme.surface
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                if (uiState.overdueInvoicesCount > 0) {
-                                    Icon(
-                                        Icons.Default.Warning,
-                                        contentDescription = null,
-                                        tint = OverdueRed,
-                                        modifier = Modifier.padding(end = 4.dp)
-                                    )
-                                }
-                                Text("Pending Invoices", style = MaterialTheme.typography.labelSmall)
-                            }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "Pending Invoices",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = "LKR ${currencyFormatter.format(uiState.pendingInvoicesLkr)}",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = if (uiState.overdueInvoicesCount > 0) OverdueRed else MaterialTheme.colorScheme.onSurface
+                                color = if (uiState.overdueInvoicesCount > 0) ExpenseRed else MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
                 }
             }
 
-            // Filter Chips
+            // Filter Chips Row
             item {
                 Row(
                     modifier = Modifier
@@ -168,13 +169,23 @@ fun IncomeScreen(
                     FilterChip(
                         selected = uiState.selectedFilter == null,
                         onClick = { viewModel.setFilter(null) },
-                        label = { Text("All") }
+                        label = { Text("All Streams") },
+                        shape = RoundedCornerShape(10.dp),
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = BrandPrimary.copy(alpha = 0.12f),
+                            selectedLabelColor = BrandPrimary
+                        )
                     )
                     com.example.pbdassignment.core.model.IncomeStreams.defaultStreams.forEach { stream ->
                         FilterChip(
                             selected = uiState.selectedFilter == stream,
                             onClick = { viewModel.setFilter(stream) },
-                            label = { Text(stream) }
+                            label = { Text(stream) },
+                            shape = RoundedCornerShape(10.dp),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = BrandPrimary.copy(alpha = 0.12f),
+                                selectedLabelColor = BrandPrimary
+                            )
                         )
                     }
                 }
@@ -190,7 +201,7 @@ fun IncomeScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No income records found.",
+                            text = "No income records in this view.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -235,22 +246,25 @@ fun IncomeCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(18.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = item.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "${item.streamType} • ${item.clientOrSource}",
                         style = MaterialTheme.typography.bodySmall,
@@ -261,7 +275,7 @@ fun IncomeCard(
                 StatusBadge(status = item.invoiceStatus)
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -272,14 +286,14 @@ fun IncomeCard(
                     if (item.currency == "USD") {
                         Text(
                             text = "$${currencyFormatter.format(item.rawAmount)} USD (@ ${item.exchangeRate} LKR)",
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     Text(
                         text = "+LKR ${currencyFormatter.format(item.lkrAmount)}",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Bold,
                         color = if (item.streamType.contains("Crypto", ignoreCase = true)) CryptoPurple else IncomeGreen
                     )
                 }
@@ -289,6 +303,7 @@ fun IncomeCard(
                         OutlinedButton(
                             onClick = { onSettleInvoice(item.id, true) },
                             shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, IncomeGreen),
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = IncomeGreen),
                             modifier = Modifier.padding(end = 4.dp)
                         ) {
@@ -297,12 +312,14 @@ fun IncomeCard(
                     }
 
                     IconButton(
-                        onClick = onDelete
+                        onClick = onDelete,
+                        modifier = Modifier.size(36.dp)
                     ) {
                         Icon(
                             Icons.Default.Delete,
                             contentDescription = "Delete Income",
-                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
+                            tint = ExpenseRed.copy(alpha = 0.85f),
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
@@ -314,22 +331,21 @@ fun IncomeCard(
 @Composable
 fun StatusBadge(status: InvoiceStatus) {
     val (bgColor, textColor) = when (status) {
-        InvoiceStatus.RECEIVED, InvoiceStatus.SETTLED -> Color(0xFFE8F5E9) to Color(0xFF2E7D32)
-        InvoiceStatus.INVOICED_PENDING -> Color(0xFFFFF3E0) to Color(0xFFEF6C00)
-        InvoiceStatus.OVERDUE -> Color(0xFFFFEBEE) to Color(0xFFC62828)
+        InvoiceStatus.RECEIVED, InvoiceStatus.SETTLED -> Color(0xFFECFDF5) to Color(0xFF047857)
+        InvoiceStatus.INVOICED_PENDING -> Color(0xFFFFFBEB) to Color(0xFFB45309)
+        InvoiceStatus.OVERDUE -> Color(0xFFFEF2F2) to Color(0xFFB91C1C)
     }
 
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(6.dp))
-            .background(bgColor)
-            .padding(horizontal = 8.dp, vertical = 4.dp)
+    Surface(
+        shape = RoundedCornerShape(6.dp),
+        color = bgColor
     ) {
         Text(
             text = status.displayName,
             style = MaterialTheme.typography.labelSmall,
             color = textColor,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
         )
     }
 }

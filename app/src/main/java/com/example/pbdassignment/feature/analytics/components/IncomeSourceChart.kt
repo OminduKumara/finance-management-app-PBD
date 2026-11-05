@@ -1,6 +1,6 @@
-﻿package com.example.pbdassignment.feature.analytics.components
+package com.example.pbdassignment.feature.analytics.components
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,10 +22,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.pbdassignment.core.model.IncomeBySource
 import com.example.pbdassignment.core.model.IncomeStreams
+import com.example.pbdassignment.ui.theme.BrandPrimary
 import com.example.pbdassignment.ui.theme.CryptoPurple
-import com.example.pbdassignment.ui.theme.EmeraldPrimary
 import com.example.pbdassignment.ui.theme.IncomeGreen
 import java.text.NumberFormat
 
@@ -38,16 +39,20 @@ fun IncomeSourceChart(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(modifier = Modifier.padding(18.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
             Text(
-                text = "Income Breakdown by Stream",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                text = "INCOME BY STREAM",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.5.sp
             )
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = "Multi-source cash inflow stability and irregular windfalls",
                 style = MaterialTheme.typography.bodySmall,
@@ -73,10 +78,10 @@ fun IncomeSourceChart(
                 incomeSources.forEach { source ->
                     val sourceColor = when (source.sourceType) {
                         IncomeStreams.SALARY -> IncomeGreen
-                        IncomeStreams.FREELANCE -> EmeraldPrimary
-                        IncomeStreams.ADSENSE -> Color(0xFF1976D2)
+                        IncomeStreams.FREELANCE -> BrandPrimary
+                        IncomeStreams.ADSENSE -> Color(0xFF3B82F6)
                         IncomeStreams.CRYPTO -> CryptoPurple
-                        else -> MaterialTheme.colorScheme.primary
+                        else -> BrandPrimary
                     }
 
                     val sourceTag = when (source.sourceType) {
@@ -97,7 +102,8 @@ fun IncomeSourceChart(
                                 Text(
                                     text = source.sourceType,
                                     style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
                                     text = sourceTag,
@@ -114,7 +120,7 @@ fun IncomeSourceChart(
                                     color = sourceColor
                                 )
                                 Text(
-                                    text = "${source.percentageOfTotal}% of inflows",
+                                    text = "${source.percentageOfTotal}% of total",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -123,13 +129,12 @@ fun IncomeSourceChart(
 
                         Spacer(modifier = Modifier.height(6.dp))
 
-                        val progressFraction = (source.percentageOfTotal / 100.0).toFloat().coerceIn(0f, 1f)
                         LinearProgressIndicator(
-                            progress = { progressFraction },
+                            progress = { (source.percentageOfTotal / 100.0).toFloat().coerceIn(0f, 1f) },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(8.dp)
-                                .clip(RoundedCornerShape(4.dp)),
+                                .height(5.dp)
+                                .clip(RoundedCornerShape(3.dp)),
                             color = sourceColor,
                             trackColor = MaterialTheme.colorScheme.surfaceVariant
                         )
