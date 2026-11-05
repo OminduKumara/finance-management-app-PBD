@@ -72,7 +72,14 @@ fun NavGraph(
 
         // Main App Screen with Bottom Navigation (Dashboard, Income, Expenses, Goals, Analytics, Profile)
         composable(Screen.IncomeDashboard.route) {
-            MainAppScreen()
+            MainAppScreen(
+                onSignOut = {
+                    FirebaseManager.signOut()
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }

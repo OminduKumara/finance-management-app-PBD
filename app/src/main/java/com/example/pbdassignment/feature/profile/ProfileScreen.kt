@@ -61,7 +61,9 @@ import java.text.NumberFormat
 import java.util.Locale
 
 @Composable
-fun ProfileScreen() {
+fun ProfileScreen(
+    onSignOut: () -> Unit = {}
+) {
     val currentUser by FirebaseManager.currentUser.collectAsState()
     val baseline by FinanceRepository.baseline.collectAsState()
 
@@ -137,7 +139,7 @@ fun ProfileScreen() {
 
                     Column {
                         Text(
-                            text = "Kavindu Silva",
+                            text = currentUser?.displayName?.takeIf { it.isNotBlank() } ?: "Kavindu Silva",
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -148,7 +150,7 @@ fun ProfileScreen() {
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = currentUser?.email ?: "kavindu.silva@startup.lk",
+                            text = currentUser?.email?.takeIf { it.isNotBlank() } ?: "kavindu.silva@startup.lk",
                             style = MaterialTheme.typography.labelSmall,
                             color = BrandPrimary,
                             fontWeight = FontWeight.Medium
@@ -410,7 +412,10 @@ fun ProfileScreen() {
         // Sign Out Button
         item {
             OutlinedButton(
-                onClick = { FirebaseManager.signOut() },
+                onClick = {
+                    FirebaseManager.signOut()
+                    onSignOut()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),

@@ -28,7 +28,9 @@ import com.example.pbdassignment.feature.profile.ProfileScreen
 import com.example.pbdassignment.ui.theme.BrandPrimary
 
 @Composable
-fun MainAppScreen() {
+fun MainAppScreen(
+    onSignOut: () -> Unit = {}
+) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -114,7 +116,7 @@ fun MainAppScreen() {
                 AnalyticsScreen()
             }
             composable(Screen.Profile.route) {
-                ProfileScreen()
+                ProfileScreen(onSignOut = onSignOut)
             }
         }
     }

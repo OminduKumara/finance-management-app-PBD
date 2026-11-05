@@ -5,6 +5,7 @@ import com.example.pbdassignment.core.data.FinanceRepository
 import com.example.pbdassignment.core.model.DefaultExpenseCategories
 import com.example.pbdassignment.core.model.ExpenseItem
 import com.example.pbdassignment.core.model.ExpenseNature
+import com.example.pbdassignment.core.model.FinancialBaseline
 import com.example.pbdassignment.core.model.GoalItem
 import com.example.pbdassignment.core.model.IncomeItem
 import com.example.pbdassignment.core.model.IncomeStreams
@@ -33,6 +34,7 @@ object FirebaseManager {
     private var incomeListener: ListenerRegistration? = null
     private var expenseListener: ListenerRegistration? = null
     private var goalListener: ListenerRegistration? = null
+    private var baselineListener: ListenerRegistration? = null
 
     init {
         auth.addAuthStateListener { firebaseAuth ->
@@ -170,7 +172,7 @@ object FirebaseManager {
                         }
                     }
                     if (remoteExpenses.isNotEmpty()) {
-                        remoteExpenses.forEach { FinanceRepository.addExpense(it) }
+                        remoteExpenses.forEach { FinanceRepository.upsertLocalExpense(it) }
                     }
                 }
             }
@@ -180,10 +182,33 @@ object FirebaseManager {
             .collection("goals").document("macbook_pro_m4")
             .addSnapshotListener { doc, error ->
                 if (error != null || doc == null || !doc.exists()) return@addSnapshotListener
-                val saved = doc.getDouble("currentSaved") ?: 11200.0
-                val target = doc.getDouble("targetAmount") ?: 490000.0
+                val saved = doc.getDouble("currentSaved") ?: doc.getDouble("totalSavedLkr") ?: 11200.0
+                val target = doc.getDouble("targetAmount") ?: doc.getDouble("targetAmountLkr") ?: 490000.0
                 FinanceRepository.updateGoalTarget(target)
                 FinanceRepository.allocateToGoal(saved - FinanceRepository.goal.value.currentSaved)
+            }
+
+        // Listen to Financial Baseline
+        baselineListener = firestore.collection("users").document(userId)
+            .collection("settings").document("baseline")
+            .addSnapshotListener { doc, error ->
+                if (error != null || doc == null || !doc.exists()) return@addSnapshotListener
+                try {
+                    val defaultBaseline = FinancialBaseline()
+                    @Suppress("UNCHECKED_CAST")
+                    val rules = (doc.get("rules") as? List<*>)?.mapNotNull { it as? String } ?: defaultBaseline.rules
+                    val remoteBaseline = FinancialBaseline(
+                        baseSalary = doc.getDouble("baseSalary") ?: defaultBaseline.baseSalary,
+                        committedRent = doc.getDouble("committedRent") ?: defaultBaseline.committedRent,
+                        committedGym = doc.getDouble("committedGym") ?: defaultBaseline.committedGym,
+                        discretionaryBudgetCap = doc.getDouble("discretionaryBudgetCap") ?: defaultBaseline.discretionaryBudgetCap,
+                        targetSavingsRate = doc.getDouble("targetSavingsRate") ?: defaultBaseline.targetSavingsRate,
+                        rules = rules
+                    )
+                    FinanceRepository.updateLocalBaseline(remoteBaseline)
+                } catch (e: Exception) {
+                    Log.w(TAG, "Parse baseline failed: ${e.message}")
+                }
             }
     }
 
@@ -346,6 +371,23 @@ object FirebaseManager {
             .addOnFailureListener { Log.w(TAG, "Sync goal failed: ${it.message}") }
     }
 
+    fun syncBaseline(baseline: FinancialBaseline) {
+        val uid = auth.currentUser?.uid ?: return
+        val docData = hashMapOf(
+            "userId" to uid,
+            "baseSalary" to baseline.baseSalary,
+            "committedRent" to baseline.committedRent,
+            "committedGym" to baseline.committedGym,
+            "discretionaryBudgetCap" to baseline.discretionaryBudgetCap,
+            "targetSavingsRate" to baseline.targetSavingsRate,
+            "rules" to baseline.rules
+        )
+        firestore.collection("users").document(uid)
+            .collection("settings").document("baseline")
+            .set(docData)
+            .addOnFailureListener { Log.w(TAG, "Sync baseline failed: ${it.message}") }
+    }
+
     private fun detachListeners() {
         incomeListener?.remove()
         incomeListener = null
@@ -353,5 +395,7 @@ object FirebaseManager {
         expenseListener = null
         goalListener?.remove()
         goalListener = null
+        baselineListener?.remove()
+        baselineListener = null
     }
 }

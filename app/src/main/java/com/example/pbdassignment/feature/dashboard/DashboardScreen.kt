@@ -45,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pbdassignment.core.firebase.FirebaseManager
 import com.example.pbdassignment.feature.dashboard.components.EditGoalDialog
 import com.example.pbdassignment.feature.dashboard.components.GoalProgressCard
 import com.example.pbdassignment.feature.dashboard.components.SpendingRatioCard
@@ -52,6 +53,8 @@ import com.example.pbdassignment.ui.theme.BrandPrimary
 import com.example.pbdassignment.ui.theme.ExpenseRed
 import com.example.pbdassignment.ui.theme.IncomeGreen
 import java.text.NumberFormat
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 @Composable
@@ -63,7 +66,15 @@ fun DashboardScreen(
     onNavigateToGoals: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val currentUser by FirebaseManager.currentUser.collectAsState()
     var showEditGoalDialog by remember { mutableStateOf(false) }
+
+    val firstName = remember(currentUser) {
+        currentUser?.displayName?.trim()?.substringBefore(" ")?.takeIf { it.isNotBlank() } ?: "Kavindu"
+    }
+    val currentMonthName = remember {
+        SimpleDateFormat("MMMM", Locale.US).format(Date())
+    }
 
     val currencyFormatter = remember {
         NumberFormat.getNumberInstance(Locale.US).apply {
@@ -89,22 +100,26 @@ fun DashboardScreen(
             ) {
                 Column {
                     Text(
-                        text = "Hello, Kavindu 👋",
+                        text = "Hello, $firstName 👋",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Cycle: November • ${uiState.daysRemainingInMonth} days left",
+                        text = "Cycle: $currentMonthName • ${uiState.daysRemainingInMonth} days left",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
+                val isHealthy = uiState.netCashflowLkr >= 0 && uiState.safeToSpendDailyLkr > 0
+                val statusColor = if (isHealthy) IncomeGreen else ExpenseRed
+                val statusText = if (isHealthy) "HEALTHY" else "WATCH SPEND"
+
                 Surface(
                     shape = RoundedCornerShape(20.dp),
-                    color = IncomeGreen.copy(alpha = 0.12f)
+                    color = statusColor.copy(alpha = 0.12f)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
@@ -114,13 +129,13 @@ fun DashboardScreen(
                             modifier = Modifier
                                 .size(7.dp)
                                 .clip(CircleShape)
-                                .background(IncomeGreen)
+                                .background(statusColor)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "HEALTHY",
+                            text = statusText,
                             style = MaterialTheme.typography.labelSmall,
-                            color = IncomeGreen,
+                            color = statusColor,
                             fontWeight = FontWeight.Bold
                         )
                     }

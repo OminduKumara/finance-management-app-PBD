@@ -146,14 +146,26 @@ object FinanceRepository {
 
     // --- Expense Methods ---
     fun addExpense(expense: ExpenseItem) {
-        _expenses.update { current ->
-            if (current.any { it.id == expense.id }) current else listOf(expense) + current
-        }
+        upsertLocalExpense(expense)
         com.example.pbdassignment.core.firebase.FirebaseManager.syncExpense(expense)
     }
 
-    fun deleteExpense(id: String) {
+    fun upsertLocalExpense(expense: ExpenseItem) {
+        _expenses.update { current ->
+            if (current.any { it.id == expense.id }) {
+                current.map { if (it.id == expense.id) expense else it }
+            } else {
+                listOf(expense) + current
+            }
+        }
+    }
+
+    fun removeLocalExpense(id: String) {
         _expenses.update { list -> list.filterNot { it.id == id } }
+    }
+
+    fun deleteExpense(id: String) {
+        removeLocalExpense(id)
         com.example.pbdassignment.core.firebase.FirebaseManager.deleteExpense(id)
     }
 
@@ -189,6 +201,11 @@ object FinanceRepository {
     // --- Financial Baseline & Custom Rules Methods ---
     fun updateBaseline(newBaseline: FinancialBaseline) {
         _baseline.value = newBaseline
+        com.example.pbdassignment.core.firebase.FirebaseManager.syncBaseline(newBaseline)
+    }
+
+    fun updateLocalBaseline(newBaseline: FinancialBaseline) {
+        _baseline.value = newBaseline
     }
 
     fun addCustomRule(ruleText: String) {
@@ -196,11 +213,13 @@ object FinanceRepository {
         _baseline.update { current ->
             current.copy(rules = current.rules + ruleText.trim())
         }
+        com.example.pbdassignment.core.firebase.FirebaseManager.syncBaseline(_baseline.value)
     }
 
     fun removeCustomRule(ruleText: String) {
         _baseline.update { current ->
             current.copy(rules = current.rules.filterNot { it == ruleText })
         }
+        com.example.pbdassignment.core.firebase.FirebaseManager.syncBaseline(_baseline.value)
     }
 }
