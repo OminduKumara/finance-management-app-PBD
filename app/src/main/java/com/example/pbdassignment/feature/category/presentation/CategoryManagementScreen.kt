@@ -118,7 +118,7 @@ fun CategoryManagementScreen(
                             containerColor = BrandPrimary,
                             disabledContainerColor = Color(0xFFE5E7EB)
                         ),
-                        modifier = Modifier.height(52.dp)
+                        modifier = Modifier.height(56.dp)
                     ) {
                         Text(
                             text = "Add",

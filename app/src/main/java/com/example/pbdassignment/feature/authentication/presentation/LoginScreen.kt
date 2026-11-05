@@ -137,7 +137,7 @@ fun LoginScreen(
                     .fillMaxWidth()
                     .height(48.dp)
             ) {
-                Text("🚀 Launch as Kavindu Silva (Live Demo)")
+                Text("Continue as Guest")
             }
         }
     }

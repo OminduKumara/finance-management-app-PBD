@@ -23,10 +23,10 @@ data class DashboardUiState(
     val daysRemainingInMonth: Int = 26,
     val savingsRatePercent: Double = 0.0,
     val goal: GoalItem = GoalItem(),
-    val projectedMonthsToGoal: Double = 12.0,
-    val committedRatio: Float = 0.5f,
-    val discretionaryRatio: Float = 0.3f,
-    val savingsRatio: Float = 0.2f
+    val projectedMonthsToGoal: Double = 0.0,
+    val committedRatio: Float = 0f,
+    val discretionaryRatio: Float = 0f,
+    val savingsRatio: Float = 0f
 )
 
 class DashboardViewModel : ViewModel() {
@@ -61,13 +61,13 @@ class DashboardViewModel : ViewModel() {
 
         // Runway calculation based on current net monthly savings
         val monthlySavingsVelocity = (realizedIncome - totalExpense).coerceAtLeast(1000.0)
-        val projectedMonths = (goal.remainingDeficit / monthlySavingsVelocity).coerceIn(1.0, 60.0)
+        val projectedMonths = if (goal.remainingDeficit <= 0.0) 0.0 else (goal.remainingDeficit / monthlySavingsVelocity).coerceIn(1.0, 60.0)
 
         // Ratios
-        val totalOutflowAndSavings = (committed + discretionary + goal.requiredMonthlySavings).coerceAtLeast(1.0)
-        val committedFraction = (committed / totalOutflowAndSavings).toFloat().coerceIn(0f, 1f)
-        val discretionaryFraction = (discretionary / totalOutflowAndSavings).toFloat().coerceIn(0f, 1f)
-        val savingsFraction = (goal.requiredMonthlySavings / totalOutflowAndSavings).toFloat().coerceIn(0f, 1f)
+        val totalOutflowAndSavings = committed + discretionary + goal.requiredMonthlySavings
+        val committedFraction = if (totalOutflowAndSavings > 0.0) (committed / totalOutflowAndSavings).toFloat().coerceIn(0f, 1f) else 0f
+        val discretionaryFraction = if (totalOutflowAndSavings > 0.0) (discretionary / totalOutflowAndSavings).toFloat().coerceIn(0f, 1f) else 0f
+        val savingsFraction = if (totalOutflowAndSavings > 0.0) (goal.requiredMonthlySavings / totalOutflowAndSavings).toFloat().coerceIn(0f, 1f) else 0f
 
         DashboardUiState(
             realizedIncomeLkr = realizedIncome,

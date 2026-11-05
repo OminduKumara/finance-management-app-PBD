@@ -69,20 +69,20 @@ fun RecurringExpenseListScreen(
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Text(
                         text = "No recurring expenses set up",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
-                        color = Color(0xFF6B7280)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     OutlinedButton(
                         onClick = onAddClick,
-                        shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(1.dp, Color(0xFFD1D5DB))
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, BrandPrimary)
                     ) {
-                        Text("Add Recurring Expense", color = Color(0xFF111827), fontSize = 13.sp)
+                        Text("Add Recurring Expense", color = BrandPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }

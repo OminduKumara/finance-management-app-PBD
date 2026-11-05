@@ -9,11 +9,16 @@ import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import androidx.room.Room
+import com.example.pbdassignment.core.data.FinanceRepository
+import com.example.pbdassignment.core.model.ExpenseItem
+import com.example.pbdassignment.core.model.ExpenseNature
+import com.example.pbdassignment.core.model.PaymentSource
 import com.example.pbdassignment.core.navigation.NavGraph
 import com.example.pbdassignment.feature.category.data.RoomCategoryRepository
 import com.example.pbdassignment.feature.category.presentation.CategoryViewModel
 import com.example.pbdassignment.feature.category.presentation.CategoryViewModelFactory
 import com.example.pbdassignment.feature.expense.data.AppDatabase
+import com.example.pbdassignment.feature.expense.data.RoomExpenseRepository
 import com.example.pbdassignment.feature.recurring.data.RecurringExpenseGenerator
 import com.example.pbdassignment.ui.theme.PbdassignmentTheme
 
@@ -40,12 +45,38 @@ class MainActivity : ComponentActivity() {
                     RecurringExpenseGenerator(database)
                 }
 
+                val expenseRepository = remember {
+                    RoomExpenseRepository(database.expenseDao())
+                }
+
                 LaunchedEffect(Unit) {
                     categoryViewModel.insertDefaultCategories()
                 }
 
                 LaunchedEffect(Unit) {
                     recurringExpenseGenerator.generateDueExpenses()
+                }
+
+                LaunchedEffect(Unit) {
+                    expenseRepository.observeExpenses().collect { roomExpenses ->
+                        roomExpenses.forEach { expense ->
+                            FinanceRepository.upsertLocalExpense(
+                                ExpenseItem(
+                                    id = expense.id,
+                                    amount = expense.amount,
+                                    category = expense.categoryName,
+                                    nature = if (expense.isCommitted) ExpenseNature.COMMITTED else ExpenseNature.DISCRETIONARY,
+                                    paymentSource = when (expense.paymentMethod.lowercase()) {
+                                        "credit card", "credit_card", "card" -> PaymentSource.PRIMARY_CARD
+                                        "bank transfer", "debit card" -> PaymentSource.SECONDARY_ACCOUNT
+                                        else -> PaymentSource.CASH
+                                    },
+                                    merchantPreset = expense.title,
+                                    notes = expense.title
+                                )
+                            )
+                        }
+                    }
                 }
 
                 val navController = rememberNavController()

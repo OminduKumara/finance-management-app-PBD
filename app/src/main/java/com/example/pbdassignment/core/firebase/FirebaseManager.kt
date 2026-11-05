@@ -108,6 +108,8 @@ object FirebaseManager {
         auth.signOut()
         _currentUser.value = null
         detachListeners()
+        FinanceRepository.clearLocalData()
+        (com.example.pbdassignment.feature.goals.GoalRepositoryProvider.instance as? com.example.pbdassignment.data.repository.GoalRepositoryImpl)?.clearLocalGoals()
     }
 
     // --- Firestore Realtime Synchronization ---
@@ -142,7 +144,7 @@ object FirebaseManager {
                         }
                     }
                     if (remoteIncomes.isNotEmpty()) {
-                        remoteIncomes.forEach { FinanceRepository.addIncome(it) }
+                        remoteIncomes.forEach { FinanceRepository.upsertLocalIncome(it) }
                     }
                 }
             }
@@ -179,13 +181,24 @@ object FirebaseManager {
 
         // Listen to Goal
         goalListener = firestore.collection("users").document(userId)
-            .collection("goals").document("macbook_pro_m4")
-            .addSnapshotListener { doc, error ->
-                if (error != null || doc == null || !doc.exists()) return@addSnapshotListener
-                val saved = doc.getDouble("currentSaved") ?: doc.getDouble("totalSavedLkr") ?: 11200.0
-                val target = doc.getDouble("targetAmount") ?: doc.getDouble("targetAmountLkr") ?: 490000.0
-                FinanceRepository.updateGoalTarget(target)
-                FinanceRepository.allocateToGoal(saved - FinanceRepository.goal.value.currentSaved)
+            .collection("goals")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null || snapshot == null || snapshot.isEmpty) return@addSnapshotListener
+                val doc = snapshot.documents.firstOrNull() ?: return@addSnapshotListener
+                val id = doc.getString("id") ?: doc.id
+                val title = doc.getString("title") ?: doc.getString("name") ?: "Savings Goal"
+                val saved = doc.getDouble("currentSaved") ?: doc.getDouble("totalSavedLkr") ?: 0.0
+                val target = doc.getDouble("targetAmount") ?: doc.getDouble("targetAmountLkr") ?: 0.0
+                val months = (doc.getLong("targetMonths") ?: 12L).toInt()
+                FinanceRepository.updateLocalGoal(
+                    GoalItem(
+                        id = id,
+                        title = title,
+                        targetAmount = target,
+                        currentSaved = saved,
+                        targetMonths = months
+                    )
+                )
             }
 
         // Listen to Financial Baseline

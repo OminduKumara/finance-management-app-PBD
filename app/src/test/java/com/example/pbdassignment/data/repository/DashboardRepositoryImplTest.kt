@@ -1,4 +1,4 @@
-﻿package com.example.pbdassignment.data.repository
+package com.example.pbdassignment.data.repository
 
 import com.example.pbdassignment.core.data.FinanceRepository
 import com.example.pbdassignment.core.model.DatePeriod
@@ -21,6 +21,33 @@ class DashboardRepositoryImplTest {
 
     @Before
     fun setup() {
+        FinanceRepository.clearLocalData()
+        FinanceRepository.upsertLocalIncome(
+            IncomeItem(
+                streamType = IncomeStreams.SALARY,
+                title = "Salary",
+                clientOrSource = "Company",
+                rawAmount = 135000.0,
+                currency = "LKR",
+                exchangeRate = 1.0
+            )
+        )
+        FinanceRepository.upsertLocalExpense(
+            ExpenseItem(
+                amount = 34000.0,
+                category = DefaultExpenseCategories.HOUSING,
+                nature = ExpenseNature.COMMITTED,
+                paymentSource = com.example.pbdassignment.core.model.PaymentSource.PRIMARY_CARD
+            )
+        )
+        FinanceRepository.upsertLocalExpense(
+            ExpenseItem(
+                amount = 3200.0,
+                category = DefaultExpenseCategories.FOOD,
+                nature = ExpenseNature.DISCRETIONARY,
+                paymentSource = com.example.pbdassignment.core.model.PaymentSource.PRIMARY_CARD
+            )
+        )
         repository = DashboardRepositoryImpl()
     }
 
