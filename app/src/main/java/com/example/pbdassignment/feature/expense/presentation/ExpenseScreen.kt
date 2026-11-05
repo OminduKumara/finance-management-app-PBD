@@ -192,7 +192,7 @@ fun ExpenseScreen() {
                 activeModalView = null
             }
         )
-    } else if (activeModalView == "add_recurring") {
+    if (activeModalView == "add_recurring") {
         AddRecurringExpenseScreen(
             categories = categories,
             existingExpense = editingRecurringExpense,
@@ -210,8 +210,9 @@ fun ExpenseScreen() {
                 activeModalView = null
             }
         )
-    } else {
-        Scaffold(
+    }
+
+    Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             floatingActionButton = {
                 if (selectedTabIndex != 2) {

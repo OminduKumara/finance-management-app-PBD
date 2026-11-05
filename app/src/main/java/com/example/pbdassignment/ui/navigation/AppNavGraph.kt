@@ -100,8 +100,7 @@ fun MainAppScreen(
             }
             composable(Screen.Goals.route) {
                 GoalListScreen(
-                    onGoalClick = { goalId -> navController.navigate(GoalRoutes.detail(goalId)) },
-                    onCreateGoalClick = { navController.navigate(GoalRoutes.CREATE) }
+                    onGoalClick = { goalId -> navController.navigate(GoalRoutes.detail(goalId)) }
                 )
             }
             composable(GoalRoutes.DETAIL) { backStackEntry ->

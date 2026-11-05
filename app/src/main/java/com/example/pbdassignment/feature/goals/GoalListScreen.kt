@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pbdassignment.core.model.SavingsGoal
 import com.example.pbdassignment.feature.goals.components.AddContributionDialog
+import com.example.pbdassignment.feature.goals.components.CreateGoalDialog
 import com.example.pbdassignment.ui.theme.BrandPrimary
 import com.example.pbdassignment.ui.theme.ExpenseRed
 import com.example.pbdassignment.ui.theme.GoalGold
@@ -58,11 +59,12 @@ import java.util.Locale
 fun GoalListScreen(
     viewModel: GoalViewModel = viewModel(),
     onGoalClick: (goalId: String) -> Unit,
-    onCreateGoalClick: () -> Unit
+    onCreateGoalClick: (() -> Unit)? = null
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     var activeDepositGoal by remember { mutableStateOf<SavingsGoal?>(null) }
+    var showCreateGoalDialog by remember { mutableStateOf(false) }
 
     val currencyFormatter = remember {
         NumberFormat.getNumberInstance(Locale.US).apply {
@@ -87,7 +89,10 @@ fun GoalListScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = onCreateGoalClick,
+                onClick = {
+                    showCreateGoalDialog = true
+                    onCreateGoalClick?.invoke()
+                },
                 containerColor = BrandPrimary,
                 contentColor = Color.White,
                 shape = RoundedCornerShape(16.dp)
@@ -149,6 +154,22 @@ fun GoalListScreen(
                 Spacer(modifier = Modifier.height(80.dp))
             }
         }
+    }
+
+    if (showCreateGoalDialog) {
+        CreateGoalDialog(
+            onDismiss = { showCreateGoalDialog = false },
+            onConfirm = { name, targetAmount, months, initialDeposit, note ->
+                viewModel.createGoal(
+                    name = name,
+                    targetAmount = targetAmount,
+                    months = months,
+                    initialDeposit = initialDeposit,
+                    note = note,
+                    onSuccess = { showCreateGoalDialog = false }
+                )
+            }
+        )
     }
 
     activeDepositGoal?.let { goal ->
