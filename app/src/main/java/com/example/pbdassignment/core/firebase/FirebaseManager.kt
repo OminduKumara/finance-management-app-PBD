@@ -6,11 +6,14 @@ import com.example.pbdassignment.core.model.DefaultExpenseCategories
 import com.example.pbdassignment.core.model.ExpenseItem
 import com.example.pbdassignment.core.model.ExpenseNature
 import com.example.pbdassignment.core.model.FinancialBaseline
+import com.example.pbdassignment.core.model.GoalContribution
 import com.example.pbdassignment.core.model.GoalItem
+import com.example.pbdassignment.core.model.GoalStatus
 import com.example.pbdassignment.core.model.IncomeItem
 import com.example.pbdassignment.core.model.IncomeStreams
 import com.example.pbdassignment.core.model.InvoiceStatus
 import com.example.pbdassignment.core.model.PaymentSource
+import com.example.pbdassignment.core.model.SavingsGoal
 import com.example.pbdassignment.feature.category.domain.Category
 import com.example.pbdassignment.feature.expense.domain.Expense
 import com.example.pbdassignment.feature.recurring.domain.RecurringExpense
@@ -263,26 +266,66 @@ object FirebaseManager {
                 }
             }
 
-        // Listen to Goal
+        // Listen to Goals
         goalListener = firestore.collection("users").document(userId)
             .collection("goals")
             .addSnapshotListener { snapshot, error ->
-                if (error != null || snapshot == null || snapshot.isEmpty) return@addSnapshotListener
-                val doc = snapshot.documents.firstOrNull() ?: return@addSnapshotListener
-                val id = doc.getString("id") ?: doc.id
-                val title = doc.getString("title") ?: doc.getString("name") ?: "Savings Goal"
-                val saved = doc.getDouble("currentSaved") ?: doc.getDouble("totalSavedLkr") ?: 0.0
-                val target = doc.getDouble("targetAmount") ?: doc.getDouble("targetAmountLkr") ?: 0.0
-                val months = (doc.getLong("targetMonths") ?: 12L).toInt()
-                FinanceRepository.updateLocalGoal(
-                    GoalItem(
-                        id = id,
-                        title = title,
-                        targetAmount = target,
-                        currentSaved = saved,
-                        targetMonths = months
-                    )
-                )
+                if (error != null) {
+                    Log.w(TAG, "Listen goals failed: ${error.message}")
+                    return@addSnapshotListener
+                }
+                if (snapshot != null && !snapshot.isEmpty) {
+                    val remoteGoals = snapshot.documents.mapNotNull { doc ->
+                        try {
+                            val id = doc.getString("id") ?: doc.id
+                            val name = doc.getString("name") ?: doc.getString("title") ?: "Savings Goal"
+                            val target = doc.getDouble("targetAmountLkr") ?: doc.getDouble("targetAmount") ?: 0.0
+                            val saved = doc.getDouble("totalSavedLkr") ?: doc.getDouble("currentSaved") ?: 0.0
+                            val deadline = doc.getLong("deadlineEpochMs")
+                                ?: (System.currentTimeMillis() + ((doc.getLong("targetMonths") ?: 12L) * 30L * 24 * 3600 * 1000))
+                            val createdAt = doc.getLong("createdAtEpochMs") ?: System.currentTimeMillis()
+                            val statusStr = doc.getString("status") ?: "ACTIVE"
+                            val status = try {
+                                GoalStatus.valueOf(statusStr)
+                            } catch (_: Exception) {
+                                GoalStatus.ACTIVE
+                            }
+                            val notes = doc.getString("notes") ?: ""
+
+                            val contributions = if (saved > 0) {
+                                listOf(
+                                    GoalContribution(
+                                        id = "contrib_$id",
+                                        goalId = id,
+                                        amountLkr = saved,
+                                        note = "Current Balance"
+                                    )
+                                )
+                            } else emptyList()
+
+                            SavingsGoal(
+                                id = id,
+                                name = name,
+                                targetAmountLkr = target,
+                                deadlineEpochMs = deadline,
+                                createdAtEpochMs = createdAt,
+                                status = status,
+                                notes = notes,
+                                contributions = contributions
+                            )
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
+
+                    if (remoteGoals.isNotEmpty()) {
+                        (com.example.pbdassignment.feature.goals.GoalRepositoryProvider.instance as? com.example.pbdassignment.data.repository.GoalRepositoryImpl)?.setRemoteGoals(remoteGoals)
+                        val primary = remoteGoals.first()
+                        val diffMs = primary.deadlineEpochMs - System.currentTimeMillis()
+                        val months = ((diffMs / (30L * 24 * 3600 * 1000)).toInt()).coerceAtLeast(1)
+                        FinanceRepository.updateLocalGoal(primary.toGoalItem(targetMonths = months))
+                    }
+                }
             }
 
         // Listen to Financial Baseline
@@ -472,14 +515,82 @@ object FirebaseManager {
             "id" to goal.id,
             "userId" to uid,
             "title" to goal.title,
+            "name" to goal.title,
             "targetAmount" to goal.targetAmount,
+            "targetAmountLkr" to goal.targetAmount,
             "currentSaved" to goal.currentSaved,
-            "targetMonths" to goal.targetMonths
+            "totalSavedLkr" to goal.currentSaved,
+            "targetMonths" to goal.targetMonths,
+            "status" to "ACTIVE",
+            "updatedAt" to System.currentTimeMillis()
         )
         firestore.collection("users").document(uid)
             .collection("goals").document(goal.id)
-            .set(docData)
+            .set(docData, com.google.firebase.firestore.SetOptions.merge())
+            .addOnSuccessListener { Log.d(TAG, "Goal successfully synced to Firestore: ${goal.id}") }
             .addOnFailureListener { Log.w(TAG, "Sync goal failed: ${it.message}") }
+    }
+
+    fun syncGoal(goal: SavingsGoal) {
+        val uid = auth.currentUser?.uid ?: return
+        val docData = hashMapOf(
+            "id" to goal.id,
+            "userId" to uid,
+            "name" to goal.name,
+            "title" to goal.name,
+            "targetAmountLkr" to goal.targetAmountLkr,
+            "targetAmount" to goal.targetAmountLkr,
+            "totalSavedLkr" to goal.totalSavedLkr,
+            "currentSaved" to goal.totalSavedLkr,
+            "deadlineEpochMs" to goal.deadlineEpochMs,
+            "createdAtEpochMs" to goal.createdAtEpochMs,
+            "status" to goal.status.name,
+            "notes" to goal.notes,
+            "targetMonths" to 12,
+            "updatedAt" to System.currentTimeMillis()
+        )
+        firestore.collection("users").document(uid)
+            .collection("goals").document(goal.id)
+            .set(docData, com.google.firebase.firestore.SetOptions.merge())
+            .addOnSuccessListener { Log.d(TAG, "SavingsGoal successfully synced to Firestore: ${goal.id}") }
+            .addOnFailureListener { Log.w(TAG, "Sync SavingsGoal failed: ${it.message}") }
+    }
+
+    fun syncContribution(contribution: GoalContribution) {
+        val uid = auth.currentUser?.uid ?: return
+        val docData = hashMapOf(
+            "id" to contribution.id,
+            "goalId" to contribution.goalId,
+            "userId" to uid,
+            "amountLkr" to contribution.amountLkr,
+            "dateEpochMs" to contribution.dateEpochMs,
+            "note" to contribution.note
+        )
+        firestore.collection("users").document(uid)
+            .collection("goals").document(contribution.goalId)
+            .collection("contributions").document(contribution.id)
+            .set(docData, com.google.firebase.firestore.SetOptions.merge())
+            .addOnSuccessListener { Log.d(TAG, "Contribution successfully synced to Firestore: ${contribution.id}") }
+            .addOnFailureListener { Log.w(TAG, "Sync contribution failed: ${it.message}") }
+    }
+
+    fun deleteGoal(goalId: String) {
+        val uid = auth.currentUser?.uid ?: return
+        firestore.collection("users").document(uid)
+            .collection("goals").document(goalId)
+            .delete()
+            .addOnSuccessListener { Log.d(TAG, "Goal deleted from Firestore: $goalId") }
+            .addOnFailureListener { Log.w(TAG, "Delete goal failed: ${it.message}") }
+    }
+
+    fun deleteContribution(goalId: String, contributionId: String) {
+        val uid = auth.currentUser?.uid ?: return
+        firestore.collection("users").document(uid)
+            .collection("goals").document(goalId)
+            .collection("contributions").document(contributionId)
+            .delete()
+            .addOnSuccessListener { Log.d(TAG, "Contribution deleted from Firestore: $contributionId") }
+            .addOnFailureListener { Log.w(TAG, "Delete contribution failed: ${it.message}") }
     }
 
     fun syncBaseline(baseline: FinancialBaseline) {

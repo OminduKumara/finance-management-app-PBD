@@ -2,8 +2,8 @@ package com.example.pbdassignment.core.model
 
 data class GoalItem(
     val id: String = "primary_goal",
-    val title: String = "Savings Goal",
-    val targetAmount: Double = 0.0,
+    val title: String = "MacBook Pro M4 (14-inch)",
+    val targetAmount: Double = 490000.0,
     val currentSaved: Double = 0.0,
     val targetMonths: Int = 12
 ) {

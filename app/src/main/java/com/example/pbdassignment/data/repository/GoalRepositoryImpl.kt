@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.update
  * Maintains an in-memory cache to guarantee instantaneous UI updates and offline resilience.
  */
 class GoalRepositoryImpl(
-    initialGoals: List<SavingsGoal> = emptyList(),
+    initialGoals: List<SavingsGoal> = listOf(SavingsGoal.createDefaultMacBookGoal()),
     private val getFirestore: () -> FirebaseFirestore? = {
         try {
             FirebaseFirestore.getInstance()
@@ -40,7 +40,41 @@ class GoalRepositoryImpl(
     }
 
     fun setRemoteGoals(remoteGoals: List<SavingsGoal>) {
-        _goals.value = remoteGoals
+        _goals.value = if (remoteGoals.isNotEmpty()) remoteGoals else listOf(SavingsGoal.createDefaultMacBookGoal())
+        syncPrimaryGoalToDashboard()
+    }
+
+    fun updateFromGoalItem(goalItem: GoalItem) {
+        _goals.update { list ->
+            if (list.any { it.id == goalItem.id }) {
+                list.map { g ->
+                    if (g.id == goalItem.id) {
+                        g.copy(
+                            name = goalItem.title,
+                            targetAmountLkr = goalItem.targetAmount
+                        )
+                    } else g
+                }
+            } else if (list.isNotEmpty()) {
+                list.mapIndexed { idx, g ->
+                    if (idx == 0) {
+                        g.copy(
+                            name = goalItem.title,
+                            targetAmountLkr = goalItem.targetAmount
+                        )
+                    } else g
+                }
+            } else {
+                listOf(
+                    SavingsGoal(
+                        id = goalItem.id,
+                        name = goalItem.title,
+                        targetAmountLkr = goalItem.targetAmount,
+                        deadlineEpochMs = System.currentTimeMillis() + (goalItem.targetMonths.toLong() * 30L * 24 * 3600 * 1000)
+                    )
+                )
+            }
+        }
     }
 
     private fun syncPrimaryGoalToDashboard() {
@@ -83,6 +117,7 @@ class GoalRepositoryImpl(
         }
 
         syncGoalToFirestore(goal)
+        goal.contributions.forEach { syncContributionToFirestore(it) }
         syncPrimaryGoalToDashboard()
         return Result.success(Unit)
     }
@@ -166,6 +201,7 @@ class GoalRepositoryImpl(
     }
 
     private fun syncGoalToFirestore(goal: SavingsGoal) {
+        FirebaseManager.syncGoal(goal)
         try {
             val firestore = getFirestore() ?: return
             val uid = FirebaseManager.getCurrentUserId()
@@ -173,22 +209,34 @@ class GoalRepositoryImpl(
                 "id" to goal.id,
                 "userId" to uid,
                 "name" to goal.name,
+                "title" to goal.name,
                 "targetAmountLkr" to goal.targetAmountLkr,
+                "targetAmount" to goal.targetAmountLkr,
                 "totalSavedLkr" to goal.totalSavedLkr,
+                "currentSaved" to goal.totalSavedLkr,
                 "deadlineEpochMs" to goal.deadlineEpochMs,
                 "createdAtEpochMs" to goal.createdAtEpochMs,
                 "status" to goal.status.name,
-                "notes" to goal.notes
+                "notes" to goal.notes,
+                "targetMonths" to 12,
+                "updatedAt" to System.currentTimeMillis()
             )
             firestore.collection("users").document(uid)
                 .collection("goals").document(goal.id)
-                .set(docData)
+                .set(docData, com.google.firebase.firestore.SetOptions.merge())
+                .addOnSuccessListener {
+                    Log.d("GoalRepositoryImpl", "Successfully synced goal ${goal.id} to Firestore")
+                }
+                .addOnFailureListener { e ->
+                    Log.e("GoalRepositoryImpl", "Failed to sync goal ${goal.id} to Firestore", e)
+                }
         } catch (e: Exception) {
             Log.w("GoalRepositoryImpl", "Firestore sync goal failed: ${e.message}")
         }
     }
 
     private fun syncContributionToFirestore(contribution: GoalContribution) {
+        FirebaseManager.syncContribution(contribution)
         try {
             val firestore = getFirestore() ?: return
             val uid = FirebaseManager.getCurrentUserId()
@@ -203,25 +251,39 @@ class GoalRepositoryImpl(
             firestore.collection("users").document(uid)
                 .collection("goals").document(contribution.goalId)
                 .collection("contributions").document(contribution.id)
-                .set(docData)
+                .set(docData, com.google.firebase.firestore.SetOptions.merge())
+                .addOnSuccessListener {
+                    Log.d("GoalRepositoryImpl", "Successfully synced contribution ${contribution.id} to Firestore")
+                }
+                .addOnFailureListener { e ->
+                    Log.e("GoalRepositoryImpl", "Failed to sync contribution ${contribution.id} to Firestore", e)
+                }
         } catch (e: Exception) {
             Log.w("GoalRepositoryImpl", "Firestore sync contribution failed: ${e.message}")
         }
     }
 
     private fun deleteGoalFromFirestore(goalId: String) {
+        FirebaseManager.deleteGoal(goalId)
         try {
             val firestore = getFirestore() ?: return
             val uid = FirebaseManager.getCurrentUserId()
             firestore.collection("users").document(uid)
                 .collection("goals").document(goalId)
                 .delete()
+                .addOnSuccessListener {
+                    Log.d("GoalRepositoryImpl", "Successfully deleted goal $goalId from Firestore")
+                }
+                .addOnFailureListener { e ->
+                    Log.e("GoalRepositoryImpl", "Failed to delete goal $goalId from Firestore", e)
+                }
         } catch (e: Exception) {
             Log.w("GoalRepositoryImpl", "Firestore delete goal failed: ${e.message}")
         }
     }
 
     private fun deleteContributionFromFirestore(goalId: String, contributionId: String) {
+        FirebaseManager.deleteContribution(goalId, contributionId)
         try {
             val firestore = getFirestore() ?: return
             val uid = FirebaseManager.getCurrentUserId()
@@ -229,6 +291,12 @@ class GoalRepositoryImpl(
                 .collection("goals").document(goalId)
                 .collection("contributions").document(contributionId)
                 .delete()
+                .addOnSuccessListener {
+                    Log.d("GoalRepositoryImpl", "Successfully deleted contribution $contributionId from Firestore")
+                }
+                .addOnFailureListener { e ->
+                    Log.e("GoalRepositoryImpl", "Failed to delete contribution $contributionId from Firestore", e)
+                }
         } catch (e: Exception) {
             Log.w("GoalRepositoryImpl", "Firestore delete contribution failed: ${e.message}")
         }

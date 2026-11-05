@@ -151,6 +151,46 @@ class GoalViewModel(
         }
     }
 
+    fun updateGoal(
+        goalId: String,
+        name: String,
+        targetAmount: Double,
+        months: Int,
+        note: String = "",
+        onSuccess: () -> Unit = {}
+    ) {
+        if (name.isBlank()) {
+            _uiState.update { it.copy(errorMessage = "Goal name cannot be empty") }
+            return
+        }
+        if (targetAmount <= 0) {
+            _uiState.update { it.copy(errorMessage = "Target amount must be greater than zero") }
+            return
+        }
+        val validMonths = months.coerceAtLeast(1)
+
+        viewModelScope.launch {
+            val existing = _uiState.value.goals.find { it.id == goalId }
+            if (existing != null) {
+                val newDeadline = System.currentTimeMillis() + (validMonths.toLong() * 30L * 24 * 3600 * 1000)
+                val updated = existing.copy(
+                    name = name.trim(),
+                    targetAmountLkr = targetAmount,
+                    deadlineEpochMs = newDeadline,
+                    notes = note.trim().ifBlank { existing.notes }
+                )
+                repository.updateGoal(updated).onSuccess {
+                    _uiState.update { it.copy(userActionSuccess = "Goal updated successfully!", errorMessage = null) }
+                    onSuccess()
+                }.onFailure { err ->
+                    _uiState.update { it.copy(errorMessage = err.localizedMessage ?: "Failed to update goal") }
+                }
+            } else {
+                _uiState.update { it.copy(errorMessage = "Goal not found") }
+            }
+        }
+    }
+
     fun deleteGoal(goalId: String, onSuccess: () -> Unit) {
         viewModelScope.launch {
             repository.deleteGoal(goalId).onSuccess {

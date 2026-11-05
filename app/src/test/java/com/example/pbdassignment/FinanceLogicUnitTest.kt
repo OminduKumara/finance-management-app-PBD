@@ -135,4 +135,46 @@ class FinanceLogicUnitTest {
         val restored = entity.toIncomeItem()
         assertEquals(original, restored)
     }
+
+    @Test
+    fun testTargetFillsWithIncomeAndReducesWithOutflow() {
+        val targetGoal = GoalItem(
+            title = "MacBook Pro M4 (14-inch)",
+            targetAmount = 490000.0,
+            currentSaved = 0.0
+        )
+        // Initial state: 0 saved, 0% progress
+        assertEquals(0.0, targetGoal.currentSaved, 0.01)
+        assertEquals(0f, targetGoal.progressFraction, 0.01f)
+
+        // Adding income fills target
+        val incomeAmount = 100000.0
+        var currentOutflow = 0.0
+        var netCashflow = incomeAmount - currentOutflow
+        var dynamicGoal = targetGoal.copy(currentSaved = (targetGoal.currentSaved + netCashflow).coerceAtLeast(0.0))
+        assertEquals(100000.0, dynamicGoal.currentSaved, 0.01)
+        assertEquals(100000.0 / 490000.0, dynamicGoal.progressFraction.toDouble(), 0.001)
+
+        // Adding outflow reduces target
+        val expenseAmount = 40000.0
+        currentOutflow += expenseAmount
+        netCashflow = incomeAmount - currentOutflow
+        dynamicGoal = targetGoal.copy(currentSaved = (targetGoal.currentSaved + netCashflow).coerceAtLeast(0.0))
+        assertEquals(60000.0, dynamicGoal.currentSaved, 0.01)
+        assertEquals(60000.0 / 490000.0, dynamicGoal.progressFraction.toDouble(), 0.001)
+
+        // Adding more outflow further reduces target
+        currentOutflow += 30000.0
+        netCashflow = incomeAmount - currentOutflow
+        dynamicGoal = targetGoal.copy(currentSaved = (targetGoal.currentSaved + netCashflow).coerceAtLeast(0.0))
+        assertEquals(30000.0, dynamicGoal.currentSaved, 0.01)
+        assertEquals(30000.0 / 490000.0, dynamicGoal.progressFraction.toDouble(), 0.001)
+
+        // Outflow exceeding income doesn't go below 0
+        currentOutflow += 50000.0
+        netCashflow = incomeAmount - currentOutflow
+        dynamicGoal = targetGoal.copy(currentSaved = (targetGoal.currentSaved + netCashflow).coerceAtLeast(0.0))
+        assertEquals(0.0, dynamicGoal.currentSaved, 0.01)
+        assertEquals(0f, dynamicGoal.progressFraction, 0.001f)
+    }
 }

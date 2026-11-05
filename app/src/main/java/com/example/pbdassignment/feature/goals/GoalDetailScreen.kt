@@ -19,6 +19,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import com.example.pbdassignment.feature.dashboard.components.EditGoalDialog
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -75,6 +77,7 @@ fun GoalDetailScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var showDepositDialog by remember { mutableStateOf(false) }
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
 
     val currencyFormatter = remember {
         NumberFormat.getNumberInstance(Locale.US).apply {
@@ -122,6 +125,9 @@ fun GoalDetailScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { showEditDialog = true }) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit Goal", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                     IconButton(onClick = { showDeleteConfirmDialog = true }) {
                         Icon(Icons.Default.Delete, contentDescription = "Delete Goal", tint = ExpenseRed)
                     }
@@ -351,6 +357,24 @@ fun GoalDetailScreen(
                 Spacer(modifier = Modifier.height(40.dp))
             }
         }
+    }
+
+    if (showEditDialog && goal != null) {
+        val diffMs = (goal.deadlineEpochMs - System.currentTimeMillis()).coerceAtLeast(0L)
+        val months = ((diffMs / (30L * 24 * 3600 * 1000)).toInt()).coerceAtLeast(1)
+        EditGoalDialog(
+            currentGoal = goal.toGoalItem(targetMonths = months),
+            onDismiss = { showEditDialog = false },
+            onConfirm = { title, target, _, newMonths ->
+                viewModel.updateGoal(
+                    goalId = goal.id,
+                    name = title,
+                    targetAmount = target,
+                    months = newMonths
+                )
+                showEditDialog = false
+            }
+        )
     }
 
     if (showDepositDialog && goal != null) {

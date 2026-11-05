@@ -6,6 +6,7 @@ import com.example.pbdassignment.core.data.FinanceRepository
 import com.example.pbdassignment.core.model.ExpenseNature
 import com.example.pbdassignment.core.model.GoalItem
 import com.example.pbdassignment.core.model.InvoiceStatus
+import com.example.pbdassignment.feature.goals.GoalRepositoryProvider
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -34,16 +35,37 @@ class DashboardViewModel : ViewModel() {
     val uiState: StateFlow<DashboardUiState> = combine(
         FinanceRepository.incomes,
         FinanceRepository.expenses,
-        FinanceRepository.goal
-    ) { incomes, expenses, goal ->
-        val realizedIncome = incomes
-            .filter { it.invoiceStatus == InvoiceStatus.RECEIVED || it.invoiceStatus == InvoiceStatus.SETTLED }
-            .sumOf { it.lkrAmount }
+        FinanceRepository.goal,
+        GoalRepositoryProvider.instance.observeGoals()
+    ) { incomes, expenses, repositoryGoal, userGoals ->
+        val realizedIncome = incomes.sumOf { it.lkrAmount }
 
         val totalExpense = expenses.sumOf { it.amount }
         val netCashflow = realizedIncome - totalExpense
         val committed = expenses.filter { it.nature == ExpenseNature.COMMITTED }.sumOf { it.amount }
         val discretionary = expenses.filter { it.nature == ExpenseNature.DISCRETIONARY }.sumOf { it.amount }
+
+        // Determine active goal: user goals first, then repository goal, then default MacBook Pro goal
+        val primaryUserGoal = userGoals.firstOrNull()
+        val baseGoal = when {
+            primaryUserGoal != null -> primaryUserGoal.toGoalItem()
+            repositoryGoal.targetAmount > 0.0 -> repositoryGoal
+            else -> GoalItem(
+                id = "primary_goal",
+                title = "MacBook Pro M4 (14-inch)",
+                targetAmount = 490000.0,
+                currentSaved = repositoryGoal.currentSaved,
+                targetMonths = 12
+            )
+        }
+
+        // Dynamically fill with income and reduce with outflow (net cashflow)
+        val dynamicSaved = (baseGoal.currentSaved + netCashflow).coerceAtLeast(0.0)
+        val dynamicGoal = baseGoal.copy(
+            currentSaved = dynamicSaved,
+            targetAmount = if (baseGoal.targetAmount > 0.0) baseGoal.targetAmount else 490000.0,
+            title = if (baseGoal.title.isNotBlank() && baseGoal.title != "Savings Goal") baseGoal.title else "MacBook Pro M4 (14-inch)"
+        )
 
         // Calendar days remaining calculation
         val calendar = Calendar.getInstance()
@@ -52,7 +74,7 @@ class DashboardViewModel : ViewModel() {
         val daysRemaining = (totalDays - currentDay + 1).coerceAtLeast(1)
 
         // Daily Safe-To-Spend Allowance: (Income - Committed Costs - Required Monthly MacBook Savings) / Days Remaining
-        val remainingForLifestyle = (realizedIncome - committed - goal.requiredMonthlySavings)
+        val remainingForLifestyle = (realizedIncome - committed - dynamicGoal.requiredMonthlySavings)
             .coerceAtLeast(0.0)
         val dailySafeToSpend = remainingForLifestyle / daysRemaining.toDouble()
 
@@ -61,13 +83,13 @@ class DashboardViewModel : ViewModel() {
 
         // Runway calculation based on current net monthly savings
         val monthlySavingsVelocity = (realizedIncome - totalExpense).coerceAtLeast(1000.0)
-        val projectedMonths = if (goal.remainingDeficit <= 0.0) 0.0 else (goal.remainingDeficit / monthlySavingsVelocity).coerceIn(1.0, 60.0)
+        val projectedMonths = if (dynamicGoal.remainingDeficit <= 0.0) 0.0 else (dynamicGoal.remainingDeficit / monthlySavingsVelocity).coerceIn(1.0, 60.0)
 
         // Ratios
-        val totalOutflowAndSavings = committed + discretionary + goal.requiredMonthlySavings
+        val totalOutflowAndSavings = committed + discretionary + dynamicGoal.requiredMonthlySavings
         val committedFraction = if (totalOutflowAndSavings > 0.0) (committed / totalOutflowAndSavings).toFloat().coerceIn(0f, 1f) else 0f
         val discretionaryFraction = if (totalOutflowAndSavings > 0.0) (discretionary / totalOutflowAndSavings).toFloat().coerceIn(0f, 1f) else 0f
-        val savingsFraction = if (totalOutflowAndSavings > 0.0) (goal.requiredMonthlySavings / totalOutflowAndSavings).toFloat().coerceIn(0f, 1f) else 0f
+        val savingsFraction = if (totalOutflowAndSavings > 0.0) (dynamicGoal.requiredMonthlySavings / totalOutflowAndSavings).toFloat().coerceIn(0f, 1f) else 0f
 
         DashboardUiState(
             realizedIncomeLkr = realizedIncome,
@@ -79,7 +101,7 @@ class DashboardViewModel : ViewModel() {
             safeToSpendDailyLkr = dailySafeToSpend,
             daysRemainingInMonth = daysRemaining,
             savingsRatePercent = savingsRate,
-            goal = goal,
+            goal = dynamicGoal,
             projectedMonthsToGoal = projectedMonths,
             committedRatio = committedFraction,
             discretionaryRatio = discretionaryFraction,
@@ -96,6 +118,8 @@ class DashboardViewModel : ViewModel() {
     }
 
     fun updateGoal(title: String, targetAmount: Double, currentSaved: Double, months: Int) {
-        FinanceRepository.updateFullGoal(title, targetAmount, currentSaved, months)
+        val netCashflow = uiState.value.netCashflowLkr
+        val adjustedSaved = (currentSaved - netCashflow).coerceAtLeast(0.0)
+        FinanceRepository.updateFullGoal(title, targetAmount, adjustedSaved, months)
     }
 }

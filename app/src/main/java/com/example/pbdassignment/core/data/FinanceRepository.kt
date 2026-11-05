@@ -31,7 +31,15 @@ object FinanceRepository {
     private val _expenses = MutableStateFlow<List<ExpenseItem>>(emptyList())
     val expenses: StateFlow<List<ExpenseItem>> = _expenses.asStateFlow()
 
-    private val _goal = MutableStateFlow(GoalItem())
+    private val _goal = MutableStateFlow(
+        GoalItem(
+            id = "primary_goal",
+            title = "MacBook Pro M4 (14-inch)",
+            targetAmount = 490000.0,
+            currentSaved = 0.0,
+            targetMonths = 12
+        )
+    )
     val goal: StateFlow<GoalItem> = _goal.asStateFlow()
 
     private val _baseline = MutableStateFlow(FinancialBaseline())
@@ -40,7 +48,13 @@ object FinanceRepository {
     fun clearLocalData() {
         _incomes.value = emptyList()
         _expenses.value = emptyList()
-        _goal.value = GoalItem()
+        _goal.value = GoalItem(
+            id = "primary_goal",
+            title = "MacBook Pro M4 (14-inch)",
+            targetAmount = 490000.0,
+            currentSaved = 0.0,
+            targetMonths = 12
+        )
         _baseline.value = FinancialBaseline()
     }
 
@@ -121,7 +135,18 @@ object FinanceRepository {
         _goal.update { current ->
             current.copy(currentSaved = current.currentSaved + amount)
         }
-        com.example.pbdassignment.core.firebase.FirebaseManager.syncGoal(_goal.value)
+        val currentGoal = _goal.value
+        com.example.pbdassignment.core.firebase.FirebaseManager.syncGoal(currentGoal)
+        (com.example.pbdassignment.feature.goals.GoalRepositoryProvider.instance as? com.example.pbdassignment.data.repository.GoalRepositoryImpl)?.let { repo ->
+            val contrib = com.example.pbdassignment.core.model.GoalContribution(
+                goalId = currentGoal.id,
+                amountLkr = amount,
+                note = "Quick Deposit"
+            )
+            CoroutineScope(Dispatchers.IO).launch {
+                repo.addContribution(contrib)
+            }
+        }
     }
 
     fun updateGoalTarget(newTarget: Double) {
@@ -129,7 +154,9 @@ object FinanceRepository {
         _goal.update { current ->
             current.copy(targetAmount = newTarget)
         }
-        com.example.pbdassignment.core.firebase.FirebaseManager.syncGoal(_goal.value)
+        val currentGoal = _goal.value
+        com.example.pbdassignment.core.firebase.FirebaseManager.syncGoal(currentGoal)
+        (com.example.pbdassignment.feature.goals.GoalRepositoryProvider.instance as? com.example.pbdassignment.data.repository.GoalRepositoryImpl)?.updateFromGoalItem(currentGoal)
     }
 
     fun updateFullGoal(title: String, targetAmount: Double, currentSaved: Double, months: Int) {
@@ -141,7 +168,9 @@ object FinanceRepository {
                 targetMonths = if (months > 0) months else it.targetMonths
             )
         }
-        com.example.pbdassignment.core.firebase.FirebaseManager.syncGoal(_goal.value)
+        val currentGoal = _goal.value
+        com.example.pbdassignment.core.firebase.FirebaseManager.syncGoal(currentGoal)
+        (com.example.pbdassignment.feature.goals.GoalRepositoryProvider.instance as? com.example.pbdassignment.data.repository.GoalRepositoryImpl)?.updateFromGoalItem(currentGoal)
     }
 
     fun updateLocalGoal(goalItem: GoalItem) {
