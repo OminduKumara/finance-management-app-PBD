@@ -192,6 +192,8 @@ fun ExpenseScreen() {
                 activeModalView = null
             }
         )
+    }
+
     if (activeModalView == "add_recurring") {
         AddRecurringExpenseScreen(
             categories = categories,
@@ -404,5 +406,4 @@ fun ExpenseScreen() {
             }
         }
     }
-}
 }
