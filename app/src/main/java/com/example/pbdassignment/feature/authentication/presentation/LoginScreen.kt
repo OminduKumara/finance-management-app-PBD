@@ -139,13 +139,6 @@ fun LoginScreen(
             ) {
                 Text("🚀 Launch as Kavindu Silva (Live Demo)")
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            TextButton(
-                onClick = onLoginSuccess,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Direct Access: Continue to Expenses / App")
-            }
         }
     }
 }
