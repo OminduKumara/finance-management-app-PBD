@@ -1,5 +1,6 @@
-﻿package com.example.pbdassignment.feature.analytics.components
+package com.example.pbdassignment.feature.analytics.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.pbdassignment.ui.theme.CommittedBlue
 import com.example.pbdassignment.ui.theme.DiscretionaryOrange
 import java.text.NumberFormat
@@ -40,36 +42,41 @@ fun CommittedVsDiscretionaryCard(
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(modifier = Modifier.padding(18.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
             Text(
-                text = "Committed vs. Discretionary Spending",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                text = "COMMITTED VS. DISCRETIONARY",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.5.sp
             )
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = "Unavoidable fixed costs vs. flexible lifestyle choices",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             // Dual Progress Split Bar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(16.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .height(10.dp)
+                    .clip(RoundedCornerShape(5.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 if (committedRatio > 0f) {
                     Box(
                         modifier = Modifier
                             .weight(committedRatio.coerceAtLeast(0.01f))
-                            .height(16.dp)
+                            .height(10.dp)
                             .background(CommittedBlue)
                     )
                 }
@@ -77,101 +84,74 @@ fun CommittedVsDiscretionaryCard(
                     Box(
                         modifier = Modifier
                             .weight(discretionaryRatio.coerceAtLeast(0.01f))
-                            .height(16.dp)
+                            .height(10.dp)
                             .background(DiscretionaryOrange)
-                    )
-                }
-                if (committedRatio <= 0f && discretionaryRatio <= 0f) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(16.dp)
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Metrics Breakdown
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                // Committed Column
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(10.dp)
-                                .clip(CircleShape)
-                                .background(CommittedBlue)
-                        )
-                        Text(
-                            text = " Committed ($committedPercent%)",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "LKR ${currencyFormatter.format(committedExpenseLkr)}",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = CommittedBlue
-                    )
-                    Text(
-                        text = "Rent (LKR 34k), Gym, Utilities",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                // Discretionary Column
-                Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(10.dp)
-                                .clip(CircleShape)
-                                .background(DiscretionaryOrange)
-                        )
-                        Text(
-                            text = " Discretionary ($discretionaryPercent%)",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "LKR ${currencyFormatter.format(discretionaryExpenseLkr)}",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = DiscretionaryOrange
-                    )
-                    Text(
-                        text = "PickMe, UberEats, Dining",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Behavioral Interceptor Tip
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                    .padding(12.dp)
+            // Metrics Breakdown
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = "💡 Insight: Discretionary spend is where Kavindu's budget leaks happen. Cutting LKR 10,000 in monthly food deliveries accelerates MacBook savings by ~1 week.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(CommittedBlue)
+                        )
+                        Text(
+                            text = " Committed ($committedPercent%)",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "LKR ${currencyFormatter.format(committedExpenseLkr)}",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Rent, Gym, Internet",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Column(horizontalAlignment = Alignment.End) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(DiscretionaryOrange)
+                        )
+                        Text(
+                            text = " Discretionary ($discretionaryPercent%)",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "LKR ${currencyFormatter.format(discretionaryExpenseLkr)}",
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "PickMe, Dining, Outings",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }

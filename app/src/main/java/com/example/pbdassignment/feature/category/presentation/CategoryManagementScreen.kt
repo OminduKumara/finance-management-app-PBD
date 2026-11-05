@@ -38,6 +38,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pbdassignment.feature.category.domain.Category
+import com.example.pbdassignment.ui.theme.BrandPrimary
+import com.example.pbdassignment.ui.theme.ExpenseRed
 import java.util.UUID
 
 @Composable
@@ -111,9 +113,9 @@ fun CategoryManagementScreen(
                             }
                         },
                         enabled = categoryName.trim().isNotEmpty(),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF111827),
+                            containerColor = BrandPrimary,
                             disabledContainerColor = Color(0xFFE5E7EB)
                         ),
                         modifier = Modifier.height(52.dp)

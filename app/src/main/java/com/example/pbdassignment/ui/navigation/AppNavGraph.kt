@@ -2,13 +2,16 @@ package com.example.pbdassignment.ui.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -22,13 +25,12 @@ import com.example.pbdassignment.feature.goals.GoalDetailScreen
 import com.example.pbdassignment.feature.goals.GoalListScreen
 import com.example.pbdassignment.feature.income.IncomeScreen
 import com.example.pbdassignment.feature.profile.ProfileScreen
+import com.example.pbdassignment.ui.theme.BrandPrimary
 
 @Composable
 fun MainAppScreen(
     onSignOut: () -> Unit = {}
 ) {
-
-
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -43,12 +45,22 @@ fun MainAppScreen(
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surface,
+                tonalElevation = 0.dp
+            ) {
                 navigationItems.forEach { screen ->
                     NavigationBarItem(
                         icon = { Icon(screen.icon, contentDescription = screen.title) },
-                        label = { Text(screen.title) },
+                        label = { Text(screen.title, style = MaterialTheme.typography.labelSmall) },
                         selected = currentRoute == screen.route,
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = BrandPrimary,
+                            selectedTextColor = BrandPrimary,
+                            indicatorColor = BrandPrimary.copy(alpha = 0.12f),
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
                         onClick = {
                             navController.navigate(screen.route) {
                                 popUpTo(navController.graph.findStartDestination().id) {

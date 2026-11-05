@@ -37,7 +37,7 @@ class ExpenseViewModel(
         viewModelScope.launch {
             repository.deleteExpense(id)
             com.example.pbdassignment.core.firebase.FirebaseManager.deleteExpense(id)
-            FinanceRepository.deleteExpense(id)
+            FinanceRepository.removeLocalExpense(id)
         }
     }
 
@@ -45,13 +45,12 @@ class ExpenseViewModel(
         viewModelScope.launch {
             repository.updateExpense(expense)
             com.example.pbdassignment.core.firebase.FirebaseManager.syncExpense(expense)
-            FinanceRepository.deleteExpense(expense.id)
             syncToFinanceRepository(expense)
         }
     }
 
     private fun syncToFinanceRepository(expense: Expense) {
-        FinanceRepository.addExpense(
+        FinanceRepository.upsertLocalExpense(
             ExpenseItem(
                 id = expense.id,
                 amount = expense.amount,

@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pbdassignment.feature.category.domain.Category
 import com.example.pbdassignment.feature.expense.domain.Expense
+import com.example.pbdassignment.ui.theme.BrandPrimary
 
 @Composable
 fun QuickAddExpenseScreen(
@@ -100,7 +101,7 @@ fun QuickAddExpenseScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFF9FAFB))
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -115,7 +116,7 @@ fun QuickAddExpenseScreen(
                 text = if (initialExpense == null) "New Expense" else "Edit Expense",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF111827),
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 20.sp
             )
 
@@ -123,7 +124,7 @@ fun QuickAddExpenseScreen(
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = "Close",
-                    tint = Color(0xFF4B5563)
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -131,9 +132,9 @@ fun QuickAddExpenseScreen(
         // Form Fields in Clean Card
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            border = BorderStroke(1.dp, Color(0xFFE5E7EB)),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(
@@ -355,9 +356,9 @@ fun QuickAddExpenseScreen(
                 modifier = Modifier
                     .weight(1f)
                     .height(48.dp),
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF111827),
+                    containerColor = BrandPrimary,
                     disabledContainerColor = Color(0xFFE5E7EB)
                 )
             ) {

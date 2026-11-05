@@ -1,5 +1,6 @@
 package com.example.pbdassignment.feature.dashboard
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,20 +21,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material.icons.filled.Receipt
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -55,13 +49,12 @@ import com.example.pbdassignment.core.firebase.FirebaseManager
 import com.example.pbdassignment.feature.dashboard.components.EditGoalDialog
 import com.example.pbdassignment.feature.dashboard.components.GoalProgressCard
 import com.example.pbdassignment.feature.dashboard.components.SpendingRatioCard
-import com.example.pbdassignment.ui.theme.CommittedBlue
-import com.example.pbdassignment.ui.theme.DiscretionaryOrange
-import com.example.pbdassignment.ui.theme.EmeraldPrimary
+import com.example.pbdassignment.ui.theme.BrandPrimary
 import com.example.pbdassignment.ui.theme.ExpenseRed
-import com.example.pbdassignment.ui.theme.GoalGold
 import com.example.pbdassignment.ui.theme.IncomeGreen
 import java.text.NumberFormat
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 @Composable
@@ -74,12 +67,14 @@ fun DashboardScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val currentUser by FirebaseManager.currentUser.collectAsState()
-    val displayName = remember(currentUser) {
-        currentUser?.displayName?.takeIf { it.isNotBlank() }
-            ?: currentUser?.email?.substringBefore('@')?.replaceFirstChar { it.uppercase() }
-            ?: "User"
-    }
     var showEditGoalDialog by remember { mutableStateOf(false) }
+
+    val firstName = remember(currentUser) {
+        currentUser?.displayName?.trim()?.substringBefore(" ")?.takeIf { it.isNotBlank() } ?: "Kavindu"
+    }
+    val currentMonthName = remember {
+        SimpleDateFormat("MMMM", Locale.US).format(Date())
+    }
 
     val currencyFormatter = remember {
         NumberFormat.getNumberInstance(Locale.US).apply {
@@ -91,12 +86,13 @@ fun DashboardScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // 1. Personalized Header
         item {
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -104,20 +100,26 @@ fun DashboardScreen(
             ) {
                 Column {
                     Text(
-                        text = "Hello, $displayName 👋",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.ExtraBold
+                        text = "Hello, $firstName 👋",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Budget Cycle • ${uiState.daysRemainingInMonth} Days Left in Month",
-                        style = MaterialTheme.typography.bodyMedium,
+                        text = "Cycle: $currentMonthName • ${uiState.daysRemainingInMonth} days left",
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
+                val isHealthy = uiState.netCashflowLkr >= 0 && uiState.safeToSpendDailyLkr > 0
+                val statusColor = if (isHealthy) IncomeGreen else ExpenseRed
+                val statusText = if (isHealthy) "HEALTHY" else "WATCH SPEND"
+
                 Surface(
                     shape = RoundedCornerShape(20.dp),
-                    color = IncomeGreen.copy(alpha = 0.12f)
+                    color = statusColor.copy(alpha = 0.12f)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
@@ -125,31 +127,31 @@ fun DashboardScreen(
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(8.dp)
+                                .size(7.dp)
                                 .clip(CircleShape)
-                                .background(IncomeGreen)
+                                .background(statusColor)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "HEALTHY",
+                            text = statusText,
                             style = MaterialTheme.typography.labelSmall,
-                            color = IncomeGreen,
-                            fontWeight = FontWeight.ExtraBold
+                            color = statusColor,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
             }
         }
 
-        // 2. Hero Card: Daily Safe-To-Spend Allowance (Simple & Detailed)
+        // 2. Hero Card: Daily Safe-To-Spend Allowance (Ultra Clean Fintech Card)
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(22.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
-                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+                colors = CardDefaults.cardColors(containerColor = BrandPrimary),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
-                Column(modifier = Modifier.padding(20.dp)) {
+                Column(modifier = Modifier.padding(22.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -159,58 +161,66 @@ fun DashboardScreen(
                             text = "DAILY SAFE-TO-SPEND",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f),
+                            color = Color.White.copy(alpha = 0.8f),
                             letterSpacing = 1.sp
                         )
 
                         Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.18f)
+                            shape = RoundedCornerShape(6.dp),
+                            color = Color.White.copy(alpha = 0.18f)
                         ) {
                             Text(
                                 text = "Formula Protected",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onPrimary,
+                                color = Color.White,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "LKR ${currencyFormatter.format(uiState.safeToSpendDailyLkr)}",
-                        style = MaterialTheme.typography.headlineLarge.copy(fontSize = 36.sp),
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-
                     Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(
+                            text = "LKR ${currencyFormatter.format(uiState.safeToSpendDailyLkr)}",
+                            style = MaterialTheme.typography.headlineLarge.copy(fontSize = 32.sp),
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color.White
+                        )
+                        Text(
+                            text = " / day",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.White.copy(alpha = 0.75f),
+                            modifier = Modifier.padding(bottom = 4.dp, start = 4.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
 
                     // Detail Pill Breakdown
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.12f),
+                        color = Color.White.copy(alpha = 0.12f),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                                .padding(horizontal = 12.dp, vertical = 9.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Remaining Pool: LKR ${currencyFormatter.format(uiState.lifestylePoolLkr)}",
+                                text = "Lifestyle Pool: LKR ${currencyFormatter.format(uiState.lifestylePoolLkr)}",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onPrimary,
+                                color = Color.White,
                                 fontWeight = FontWeight.Medium
                             )
                             Text(
                                 text = "÷ ${uiState.daysRemainingInMonth} Days",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
+                                color = Color.White.copy(alpha = 0.9f),
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -219,15 +229,15 @@ fun DashboardScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "✓ Guaranteed after pre-funding committed rent, gym & MacBook target.",
+                        text = "✓ Guaranteed after pre-funding rent, gym & MacBook target.",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
+                        color = Color.White.copy(alpha = 0.75f)
                     )
                 }
             }
         }
 
-        // 3. Quick Action Shortcuts (Simple 3-Pill Row)
+        // 3. Quick Action Shortcuts (Minimalist Pill Row)
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -250,31 +260,32 @@ fun DashboardScreen(
                 QuickActionButton(
                     icon = Icons.Default.QueryStats,
                     label = "Analytics",
-                    color = MaterialTheme.colorScheme.primary,
+                    color = BrandPrimary,
                     modifier = Modifier.weight(1f),
                     onClick = onNavigateToAnalytics
                 )
             }
         }
 
-        // 4. Monthly Inflow vs Outflow Cashflow Card (Detailed)
+        // 4. Monthly Inflow vs Outflow Cashflow Card
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
+                shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
-                Column(modifier = Modifier.padding(18.dp)) {
+                Column(modifier = Modifier.padding(20.dp)) {
                     Text(
                         text = "MONTHLY CASHFLOW & SAVINGS RATE",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.8.sp
+                        letterSpacing = 0.5.sp
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -282,43 +293,46 @@ fun DashboardScreen(
                     ) {
                         Column {
                             Text(
-                                "Total Inflow",
-                                style = MaterialTheme.typography.bodySmall,
+                                text = "Inflows",
+                                style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                            Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "+LKR ${currencyFormatter.format(uiState.realizedIncomeLkr)}",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.ExtraBold,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Bold,
                                 color = IncomeGreen
                             )
                         }
 
                         Column {
                             Text(
-                                "Total Outflows",
-                                style = MaterialTheme.typography.bodySmall,
+                                text = "Outflows",
+                                style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                            Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "-LKR ${currencyFormatter.format(uiState.totalExpenseLkr)}",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.ExtraBold,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Bold,
                                 color = ExpenseRed
                             )
                         }
 
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
-                                "Net Surplus",
-                                style = MaterialTheme.typography.bodySmall,
+                                text = "Net Surplus",
+                                style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                            Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "LKR ${currencyFormatter.format(uiState.netCashflowLkr)}",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = if (uiState.netCashflowLkr >= 0) EmeraldPrimary else ExpenseRed
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = if (uiState.netCashflowLkr >= 0) BrandPrimary else ExpenseRed
                             )
                         }
                     }
@@ -339,8 +353,8 @@ fun DashboardScreen(
                         Text(
                             text = "${uiState.savingsRatePercent.toInt()}%",
                             style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = EmeraldPrimary
+                            fontWeight = FontWeight.Bold,
+                            color = BrandPrimary
                         )
                     }
 
@@ -352,7 +366,7 @@ fun DashboardScreen(
                             .fillMaxWidth()
                             .height(6.dp)
                             .clip(RoundedCornerShape(3.dp)),
-                        color = EmeraldPrimary,
+                        color = BrandPrimary,
                         trackColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 }
@@ -385,10 +399,10 @@ fun DashboardScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onNavigateToAnalytics() },
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
-                )
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Row(
                     modifier = Modifier
@@ -398,16 +412,15 @@ fun DashboardScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "Financial Analytics & Charts",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                        Text(
+                            text = "Analytics & Breakdown",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "Interactive expense donut, multi-source income & ratios",
+                            text = "Category donut chart, cash flow trends & ratios",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -415,7 +428,7 @@ fun DashboardScreen(
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = "View Analytics",
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = BrandPrimary,
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }
@@ -423,7 +436,7 @@ fun DashboardScreen(
         }
 
         item {
-            Spacer(modifier = Modifier.height(80.dp))
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 
@@ -452,13 +465,13 @@ private fun QuickActionButton(
             .clip(RoundedCornerShape(14.dp))
             .clickable { onClick() },
         color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
         shape = RoundedCornerShape(14.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 12.dp, horizontal = 10.dp),
+                .padding(vertical = 12.dp, horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
@@ -466,13 +479,13 @@ private fun QuickActionButton(
                 icon,
                 contentDescription = label,
                 tint = color,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
             )
         }

@@ -60,6 +60,8 @@ import com.example.pbdassignment.feature.recurring.presentation.AddRecurringExpe
 import com.example.pbdassignment.feature.recurring.presentation.RecurringExpenseListScreen
 import com.example.pbdassignment.feature.recurring.presentation.RecurringExpenseViewModel
 import com.example.pbdassignment.feature.recurring.presentation.RecurringExpenseViewModelFactory
+import com.example.pbdassignment.ui.theme.BrandPrimary
+import com.example.pbdassignment.ui.theme.ExpenseRed
 import java.text.NumberFormat
 import java.util.Locale
 import java.util.UUID
@@ -100,7 +102,7 @@ fun ExpenseScreen() {
         if (expenses.isNotEmpty()) {
             expenses.forEach { expense ->
                 com.example.pbdassignment.core.firebase.FirebaseManager.syncExpense(expense)
-                FinanceRepository.addExpense(
+                FinanceRepository.upsertLocalExpense(
                     ExpenseItem(
                         id = expense.id,
                         amount = expense.amount,
@@ -210,23 +212,30 @@ fun ExpenseScreen() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF9FAFB))
+                .background(MaterialTheme.colorScheme.background)
         ) {
             // Top Clean App Bar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 14.dp),
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Expenses",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF111827),
-                    fontSize = 22.sp
-                )
+                Column {
+                    Text(
+                        text = "Expenses",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Track fixed obligations, lifestyle spend & categories",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
 
                 Button(
                     onClick = {
@@ -238,8 +247,8 @@ fun ExpenseScreen() {
                             activeModalView = "add_expense"
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF111827)),
-                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = BrandPrimary),
+                    shape = RoundedCornerShape(12.dp),
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 14.dp, vertical = 8.dp)
                 ) {
                     Icon(
@@ -253,7 +262,7 @@ fun ExpenseScreen() {
                         text = if (selectedTabIndex == 1) "Add Recurring" else "Add Expense",
                         color = Color.White,
                         fontSize = 13.sp,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }
@@ -263,32 +272,31 @@ fun ExpenseScreen() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                border = BorderStroke(1.dp, Color(0xFFE5E7EB)),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
+                        .padding(18.dp)
                 ) {
                     Text(
                         text = "TOTAL SPENT",
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF6B7280),
-                        letterSpacing = 1.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 11.sp
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        letterSpacing = 0.5.sp,
+                        fontWeight = FontWeight.Bold
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "LKR ${currencyFormatter.format(totalOutflows)}",
+                        text = "-LKR ${currencyFormatter.format(totalOutflows)}",
                         style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF111827),
+                        fontWeight = FontWeight.ExtraBold,
+                        color = ExpenseRed,
                         fontSize = 24.sp
                     )
 
@@ -297,8 +305,7 @@ fun ExpenseScreen() {
                     Text(
                         text = "Fixed: LKR ${currencyFormatter.format(committedOutflows)}   •   Lifestyle: LKR ${currencyFormatter.format(discretionaryOutflows)}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF6B7280),
-                        fontSize = 12.sp
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -310,8 +317,8 @@ fun ExpenseScreen() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xFFE5E7EB))
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
                     .padding(3.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
@@ -326,8 +333,8 @@ fun ExpenseScreen() {
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(if (isSelected) Color.White else Color.Transparent)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent)
                             .clickable { selectedTabIndex = index }
                             .padding(vertical = 8.dp),
                         contentAlignment = Alignment.Center
@@ -335,8 +342,8 @@ fun ExpenseScreen() {
                         Text(
                             text = title,
                             fontSize = 12.sp,
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                            color = if (isSelected) Color(0xFF111827) else Color(0xFF6B7280)
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            color = if (isSelected) BrandPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }

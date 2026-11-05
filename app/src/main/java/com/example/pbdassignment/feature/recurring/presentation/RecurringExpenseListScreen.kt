@@ -34,6 +34,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pbdassignment.feature.recurring.domain.RecurringExpense
+import com.example.pbdassignment.ui.theme.BrandPrimary
+import com.example.pbdassignment.ui.theme.ExpenseRed
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -92,9 +94,9 @@ fun RecurringExpenseListScreen(
                 items(expenses, key = { it.id }) { expense ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        border = BorderStroke(1.dp, Color(0xFFE5E7EB)),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                     ) {
                         Row(
@@ -108,14 +110,14 @@ fun RecurringExpenseListScreen(
                                 Text(
                                     text = expense.title,
                                     style = MaterialTheme.typography.bodyLarge,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = Color(0xFF111827)
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     text = "${expense.frequency.lowercase().replaceFirstChar { it.uppercase() }} • ${expense.categoryName} • ${if (expense.isActive) "Active" else "Paused"}",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = Color(0xFF6B7280),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 12.sp
                                 )
                             }
@@ -126,8 +128,8 @@ fun RecurringExpenseListScreen(
                                 Text(
                                     text = "-${expense.currencyCode} ${currencyFormatter.format(expense.amount)}",
                                     style = MaterialTheme.typography.bodyLarge,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = Color(0xFF111827)
+                                    fontWeight = FontWeight.Bold,
+                                    color = ExpenseRed
                                 )
 
                                 Spacer(modifier = Modifier.height(2.dp))
@@ -140,7 +142,7 @@ fun RecurringExpenseListScreen(
                                         Icon(
                                             imageVector = Icons.Default.Edit,
                                             contentDescription = "Edit",
-                                            tint = Color(0xFF6B7280),
+                                            tint = BrandPrimary,
                                             modifier = Modifier.size(16.dp)
                                         )
                                     }
@@ -152,7 +154,7 @@ fun RecurringExpenseListScreen(
                                         Icon(
                                             imageVector = Icons.Default.Delete,
                                             contentDescription = "Delete",
-                                            tint = Color(0xFF9CA3AF),
+                                            tint = ExpenseRed.copy(alpha = 0.8f),
                                             modifier = Modifier.size(16.dp)
                                         )
                                     }

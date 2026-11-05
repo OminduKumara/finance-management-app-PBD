@@ -74,8 +74,9 @@ fun NavGraph(
         composable(Screen.IncomeDashboard.route) {
             MainAppScreen(
                 onSignOut = {
+                    FirebaseManager.signOut()
                     navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.IncomeDashboard.route) { inclusive = true }
+                        popUpTo(0) { inclusive = true }
                     }
                 }
             )

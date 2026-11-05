@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pbdassignment.feature.expense.components.ExpenseCard
 import com.example.pbdassignment.feature.expense.domain.Expense
+import com.example.pbdassignment.ui.theme.BrandPrimary
 
 @Composable
 fun ExpenseListScreen(
@@ -73,16 +74,10 @@ fun ExpenseListScreen(
                     selected = selectedCategoryFilter == null,
                     onClick = { selectedCategoryFilter = null },
                     label = { Text("All (${expenses.size})", fontSize = 12.sp) },
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(10.dp),
                     colors = FilterChipDefaults.filterChipColors(
-                        selectedContainerColor = Color(0xFF1F2937),
-                        selectedLabelColor = Color.White,
-                        containerColor = Color.Transparent,
-                        labelColor = Color(0xFF4B5563)
-                    ),
-                    border = BorderStroke(
-                        1.dp,
-                        if (selectedCategoryFilter == null) Color(0xFF1F2937) else Color(0xFFE5E7EB)
+                        selectedContainerColor = BrandPrimary.copy(alpha = 0.12f),
+                        selectedLabelColor = BrandPrimary
                     )
                 )
 
@@ -95,16 +90,10 @@ fun ExpenseListScreen(
                             selectedCategoryFilter = if (isSelected) null else category
                         },
                         label = { Text("$category ($count)", fontSize = 12.sp) },
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(10.dp),
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = Color(0xFF1F2937),
-                            selectedLabelColor = Color.White,
-                            containerColor = Color.Transparent,
-                            labelColor = Color(0xFF4B5563)
-                        ),
-                        border = BorderStroke(
-                            1.dp,
-                            if (isSelected) Color(0xFF1F2937) else Color(0xFFE5E7EB)
+                            selectedContainerColor = BrandPrimary.copy(alpha = 0.12f),
+                            selectedLabelColor = BrandPrimary
                         )
                     )
                 }

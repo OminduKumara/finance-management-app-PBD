@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.sp
 import com.example.pbdassignment.feature.category.domain.Category
 import com.example.pbdassignment.feature.recurring.domain.RecurrenceFrequency
 import com.example.pbdassignment.feature.recurring.domain.RecurringExpense
+import com.example.pbdassignment.ui.theme.BrandPrimary
 import java.util.UUID
 
 @Composable
@@ -399,9 +400,9 @@ fun AddRecurringExpenseScreen(
                 modifier = Modifier
                     .weight(1f)
                     .height(48.dp),
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF111827),
+                    containerColor = BrandPrimary,
                     disabledContainerColor = Color(0xFFE5E7EB)
                 )
             ) {

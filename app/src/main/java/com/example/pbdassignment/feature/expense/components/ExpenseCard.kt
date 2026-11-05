@@ -29,6 +29,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pbdassignment.feature.expense.domain.Expense
+import com.example.pbdassignment.ui.theme.BrandPrimary
+import com.example.pbdassignment.ui.theme.ExpenseRed
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -54,11 +56,11 @@ fun ExpenseCard(
 
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        border = BorderStroke(1.dp, Color(0xFFE5E7EB)),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
@@ -74,14 +76,14 @@ fun ExpenseCard(
                 Text(
                     text = expense.title,
                     style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "${expense.categoryName} • ${expense.paymentMethod} • $formattedDate • ${if (expense.isCommitted) "Fixed" else "Lifestyle"}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF6B7280),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp
                 )
             }
@@ -94,8 +96,8 @@ fun ExpenseCard(
                 Text(
                     text = "-LKR ${currencyFormatter.format(expense.amount)}",
                     style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    fontWeight = FontWeight.Bold,
+                    color = ExpenseRed
                 )
 
                 Spacer(modifier = Modifier.height(2.dp))
@@ -108,7 +110,7 @@ fun ExpenseCard(
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Edit",
-                            tint = Color(0xFF6B7280),
+                            tint = BrandPrimary,
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -120,7 +122,7 @@ fun ExpenseCard(
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Delete",
-                            tint = Color(0xFF9CA3AF),
+                            tint = ExpenseRed.copy(alpha = 0.8f),
                             modifier = Modifier.size(16.dp)
                         )
                     }

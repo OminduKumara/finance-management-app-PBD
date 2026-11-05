@@ -1,4 +1,4 @@
-﻿package com.example.pbdassignment.data.repository
+package com.example.pbdassignment.data.repository
 
 import android.util.Log
 import com.example.pbdassignment.core.firebase.FirebaseManager
