@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pbdassignment.feature.category.domain.Category
 import com.example.pbdassignment.ui.theme.BrandPrimary
-import com.example.pbdassignment.ui.theme.ExpenseRed
 import java.util.UUID
 
 @Composable
@@ -51,6 +49,16 @@ fun CategoryManagementScreen(
 ) {
     var categoryName by remember { mutableStateOf("") }
 
+    val textFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = BrandPrimary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+        focusedContainerColor = Color.Transparent,
+        unfocusedContainerColor = Color.Transparent,
+        cursorColor = BrandPrimary
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -60,22 +68,22 @@ fun CategoryManagementScreen(
         // Add Category Card (Minimalist)
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            border = BorderStroke(1.dp, Color(0xFFE5E7EB)),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(14.dp),
+                    .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
                     text = "New Category",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF374151),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 13.sp
                 )
 
@@ -87,14 +95,17 @@ fun CategoryManagementScreen(
                     OutlinedTextField(
                         value = categoryName,
                         onValueChange = { categoryName = it },
-                        placeholder = { Text("Category name", color = Color(0xFF9CA3AF), fontSize = 14.sp) },
+                        placeholder = {
+                            Text(
+                                "Category name",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                fontSize = 14.sp
+                            )
+                        },
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(10.dp),
                         singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = Color(0xFFD1D5DB),
-                            focusedBorderColor = Color(0xFF111827)
-                        )
+                        colors = textFieldColors
                     )
 
                     Button(
@@ -116,15 +127,15 @@ fun CategoryManagementScreen(
                         shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = BrandPrimary,
-                            disabledContainerColor = Color(0xFFE5E7EB)
+                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
                         ),
                         modifier = Modifier.height(56.dp)
                     ) {
                         Text(
                             text = "Add",
                             fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = if (categoryName.trim().isNotEmpty()) Color.White else Color(0xFF9CA3AF)
+                            fontWeight = FontWeight.Bold,
+                            color = if (categoryName.trim().isNotEmpty()) Color.White else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                         )
                     }
                 }
@@ -139,30 +150,30 @@ fun CategoryManagementScreen(
             items(categories, key = { it.id }) { category ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    border = BorderStroke(1.dp, Color(0xFFE5E7EB)),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
                             text = category.name,
                             style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = Color(0xFF111827)
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
                         if (category.isDefault) {
                             Text(
                                 text = "System",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = Color(0xFF9CA3AF),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 11.sp
                             )
                         } else {
@@ -173,7 +184,7 @@ fun CategoryManagementScreen(
                                 Icon(
                                     Icons.Default.Delete,
                                     contentDescription = "Delete",
-                                    tint = Color(0xFF9CA3AF),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(16.dp)
                                 )
                             }

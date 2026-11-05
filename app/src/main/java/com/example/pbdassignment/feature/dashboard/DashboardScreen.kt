@@ -67,10 +67,12 @@ fun DashboardScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val currentUser by FirebaseManager.currentUser.collectAsState()
+    val customDisplayName by FirebaseManager.customDisplayName.collectAsState()
     var showEditGoalDialog by remember { mutableStateOf(false) }
 
-    val firstName = remember(currentUser) {
-        currentUser?.displayName?.trim()?.substringBefore(" ")?.takeIf { it.isNotBlank() }
+    val firstName = remember(currentUser, customDisplayName) {
+        customDisplayName?.trim()?.substringBefore(" ")?.takeIf { it.isNotBlank() }
+            ?: currentUser?.displayName?.trim()?.substringBefore(" ")?.takeIf { it.isNotBlank() }
             ?: currentUser?.email?.substringBefore("@")?.takeIf { it.isNotBlank() }
             ?: "User"
     }
@@ -227,49 +229,11 @@ fun DashboardScreen(
                             )
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "✓ Calculated after pre-funding fixed bills & savings targets.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.75f)
-                    )
                 }
             }
         }
 
-        // 3. Quick Action Shortcuts (Minimalist Pill Row)
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                QuickActionButton(
-                    icon = Icons.Default.AccountBalanceWallet,
-                    label = "+ Inflow",
-                    color = IncomeGreen,
-                    modifier = Modifier.weight(1f),
-                    onClick = onNavigateToIncome
-                )
-                QuickActionButton(
-                    icon = Icons.Default.Receipt,
-                    label = "+ Outflow",
-                    color = ExpenseRed,
-                    modifier = Modifier.weight(1f),
-                    onClick = onNavigateToExpenses
-                )
-                QuickActionButton(
-                    icon = Icons.Default.QueryStats,
-                    label = "Analytics",
-                    color = BrandPrimary,
-                    modifier = Modifier.weight(1f),
-                    onClick = onNavigateToAnalytics
-                )
-            }
-        }
-
-        // 4. Monthly Inflow vs Outflow Cashflow Card
+        // 3. Monthly Inflow vs Outflow Cashflow Card
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -291,9 +255,9 @@ fun DashboardScreen(
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "Inflows",
                                 style = MaterialTheme.typography.labelSmall,
@@ -302,13 +266,14 @@ fun DashboardScreen(
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "+LKR ${currencyFormatter.format(uiState.realizedIncomeLkr)}",
-                                style = MaterialTheme.typography.bodyLarge,
+                                style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = IncomeGreen
+                                color = IncomeGreen,
+                                maxLines = 1
                             )
                         }
 
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "Outflows",
                                 style = MaterialTheme.typography.labelSmall,
@@ -317,13 +282,17 @@ fun DashboardScreen(
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "-LKR ${currencyFormatter.format(uiState.totalExpenseLkr)}",
-                                style = MaterialTheme.typography.bodyLarge,
+                                style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = ExpenseRed
+                                color = ExpenseRed,
+                                maxLines = 1
                             )
                         }
 
-                        Column(horizontalAlignment = Alignment.End) {
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            horizontalAlignment = Alignment.End
+                        ) {
                             Text(
                                 text = "Net Surplus",
                                 style = MaterialTheme.typography.labelSmall,
@@ -332,9 +301,10 @@ fun DashboardScreen(
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "LKR ${currencyFormatter.format(uiState.netCashflowLkr)}",
-                                style = MaterialTheme.typography.bodyLarge,
+                                style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = if (uiState.netCashflowLkr >= 0) BrandPrimary else ExpenseRed
+                                color = if (uiState.netCashflowLkr >= 0) BrandPrimary else ExpenseRed,
+                                maxLines = 1
                             )
                         }
                     }
@@ -451,45 +421,5 @@ fun DashboardScreen(
                 showEditGoalDialog = false
             }
         )
-    }
-}
-
-@Composable
-private fun QuickActionButton(
-    icon: ImageVector,
-    label: String,
-    color: Color,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    Surface(
-        modifier = modifier
-            .clip(RoundedCornerShape(14.dp))
-            .clickable { onClick() },
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-        shape = RoundedCornerShape(14.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp, horizontal = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                icon,
-                contentDescription = label,
-                tint = color,
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
     }
 }

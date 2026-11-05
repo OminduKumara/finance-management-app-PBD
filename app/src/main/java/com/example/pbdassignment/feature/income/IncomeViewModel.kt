@@ -5,11 +5,14 @@ import androidx.lifecycle.viewModelScope
 import com.example.pbdassignment.core.data.FinanceRepository
 import com.example.pbdassignment.core.model.IncomeItem
 import com.example.pbdassignment.core.model.InvoiceStatus
+import com.example.pbdassignment.feature.income.data.IncomeRepositoryProvider
+import com.example.pbdassignment.feature.income.data.LocalIncomeRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 data class IncomeUiState(
     val items: List<IncomeItem> = emptyList(),
@@ -19,7 +22,9 @@ data class IncomeUiState(
     val selectedFilter: String? = null
 )
 
-class IncomeViewModel : ViewModel() {
+class IncomeViewModel(
+    private val repository: LocalIncomeRepository? = IncomeRepositoryProvider.instance
+) : ViewModel() {
 
     private val _selectedFilter = MutableStateFlow<String?>(null)
 
@@ -70,19 +75,29 @@ class IncomeViewModel : ViewModel() {
             exchangeRate = exchangeRate,
             invoiceStatus = status
         )
-        FinanceRepository.addIncome(newItem)
+        viewModelScope.launch {
+            repository?.addIncome(newItem)
+            FinanceRepository.addIncome(newItem)
+        }
     }
 
     fun markInvoiceSettled(id: String, sweepPercentage: Int = 0) {
-        val income = FinanceRepository.incomes.value.find { it.id == id } ?: return
-        FinanceRepository.updateInvoiceStatus(id, InvoiceStatus.SETTLED)
-        if (sweepPercentage > 0) {
-            val sweepAmount = (income.lkrAmount * sweepPercentage) / 100.0
-            FinanceRepository.allocateToGoal(sweepAmount)
+        viewModelScope.launch {
+            val income = FinanceRepository.incomes.value.find { it.id == id } ?: return@launch
+            val updated = income.copy(invoiceStatus = InvoiceStatus.SETTLED)
+            repository?.updateIncome(updated)
+            FinanceRepository.updateInvoiceStatus(id, InvoiceStatus.SETTLED)
+            if (sweepPercentage > 0) {
+                val sweepAmount = (income.lkrAmount * sweepPercentage) / 100.0
+                FinanceRepository.allocateToGoal(sweepAmount)
+            }
         }
     }
 
     fun deleteIncome(id: String) {
-        FinanceRepository.deleteIncome(id)
+        viewModelScope.launch {
+            repository?.deleteIncome(id)
+            FinanceRepository.deleteIncome(id)
+        }
     }
 }

@@ -11,15 +11,18 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.pbdassignment.feature.recurring.data.RecurringExpenseDao
 import com.example.pbdassignment.feature.recurring.data.RecurringExpenseEntity
+import com.example.pbdassignment.feature.income.data.IncomeDao
+import com.example.pbdassignment.feature.income.data.IncomeEntity
 import androidx.room.withTransaction
 
 @Database(
     entities = [
         ExpenseEntity::class,
         CategoryEntity::class,
-        RecurringExpenseEntity::class
+        RecurringExpenseEntity::class,
+        IncomeEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -29,6 +32,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun categoryDao(): CategoryDao
 
     abstract fun recurringExpenseDao(): RecurringExpenseDao
+
+    abstract fun incomeDao(): IncomeDao
 
     companion object {
         @Volatile
@@ -41,7 +46,8 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "pbd_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                    .fallbackToDestructiveMigrationOnDowngrade()
                     .build()
                     .also { INSTANCE = it }
             }
@@ -81,6 +87,30 @@ abstract class AppDatabase : RoomDatabase() {
                 isActive INTEGER NOT NULL,
                 notes TEXT NOT NULL,
                 lastGeneratedDateMillis INTEGER,
+                PRIMARY KEY(id)
+            )
+            """.trimIndent()
+                )
+            }
+        }
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+            CREATE TABLE IF NOT EXISTS incomes (
+                id TEXT NOT NULL,
+                streamType TEXT NOT NULL,
+                title TEXT NOT NULL,
+                clientOrSource TEXT NOT NULL,
+                rawAmount REAL NOT NULL,
+                currency TEXT NOT NULL,
+                exchangeRate REAL NOT NULL,
+                lkrAmount REAL NOT NULL,
+                date INTEGER NOT NULL,
+                invoiceStatus TEXT NOT NULL,
+                dueDate INTEGER,
+                isSweptToGoal INTEGER NOT NULL DEFAULT 0,
+                goalSweptAmount REAL NOT NULL DEFAULT 0.0,
                 PRIMARY KEY(id)
             )
             """.trimIndent()

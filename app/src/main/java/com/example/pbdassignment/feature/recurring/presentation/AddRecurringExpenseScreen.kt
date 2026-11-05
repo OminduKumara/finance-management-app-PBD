@@ -101,10 +101,22 @@ fun AddRecurringExpenseScreen(
     val parsedAmount = amount.toDoubleOrNull()
     val isFormValid = title.isNotBlank() && parsedAmount != null && parsedAmount > 0
 
+    val textFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = BrandPrimary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+        focusedContainerColor = Color.Transparent,
+        unfocusedContainerColor = Color.Transparent,
+        focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        cursorColor = BrandPrimary
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF9FAFB))
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -119,7 +131,7 @@ fun AddRecurringExpenseScreen(
                 text = if (existingExpense == null) "New Recurring Expense" else "Edit Recurring Expense",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF111827),
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 20.sp
             )
 
@@ -127,7 +139,7 @@ fun AddRecurringExpenseScreen(
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = "Close",
-                    tint = Color(0xFF4B5563)
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -135,9 +147,9 @@ fun AddRecurringExpenseScreen(
         // Form Fields in Clean Card
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            border = BorderStroke(1.dp, Color(0xFFE5E7EB)),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(
@@ -151,22 +163,25 @@ fun AddRecurringExpenseScreen(
                     Text(
                         text = "Title",
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF374151),
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 13.sp
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     OutlinedTextField(
                         value = title,
                         onValueChange = { title = it },
-                        placeholder = { Text("e.g. Apartment Rent, Internet, Gym", color = Color(0xFF9CA3AF), fontSize = 14.sp) },
+                        placeholder = {
+                            Text(
+                                "e.g. Apartment Rent, Internet, Gym",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                fontSize = 14.sp
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(10.dp),
                         singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = Color(0xFFD1D5DB),
-                            focusedBorderColor = Color(0xFF111827)
-                        )
+                        colors = textFieldColors
                     )
                 }
 
@@ -175,23 +190,26 @@ fun AddRecurringExpenseScreen(
                     Text(
                         text = "Amount (LKR)",
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF374151),
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 13.sp
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     OutlinedTextField(
                         value = amount,
                         onValueChange = { amount = it },
-                        placeholder = { Text("0.00", color = Color(0xFF9CA3AF), fontSize = 14.sp) },
+                        placeholder = {
+                            Text(
+                                "0.00",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                fontSize = 14.sp
+                            )
+                        },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(10.dp),
                         singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = Color(0xFFD1D5DB),
-                            focusedBorderColor = Color(0xFF111827)
-                        )
+                        colors = textFieldColors
                     )
                 }
 
@@ -200,8 +218,8 @@ fun AddRecurringExpenseScreen(
                     Text(
                         text = "Billing Frequency",
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF374151),
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 13.sp
                     )
                     Spacer(modifier = Modifier.height(6.dp))
@@ -209,27 +227,42 @@ fun AddRecurringExpenseScreen(
                         OutlinedButton(
                             onClick = { frequencyExpanded = true },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(8.dp),
-                            border = BorderStroke(1.dp, Color(0xFFD1D5DB)),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF111827))
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(selectedFrequency.displayName, fontSize = 14.sp)
-                                Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = Color(0xFF6B7280))
+                                Text(
+                                    selectedFrequency.displayName,
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Icon(
+                                    Icons.Default.ArrowDropDown,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
 
                         DropdownMenu(
                             expanded = frequencyExpanded,
-                            onDismissRequest = { frequencyExpanded = false }
+                            onDismissRequest = { frequencyExpanded = false },
+                            modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                         ) {
                             RecurrenceFrequency.entries.forEach { freq ->
                                 DropdownMenuItem(
-                                    text = { Text(freq.displayName, fontSize = 14.sp) },
+                                    text = {
+                                        Text(
+                                            freq.displayName,
+                                            fontSize = 14.sp,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    },
                                     onClick = {
                                         selectedFrequency = freq
                                         frequencyExpanded = false
@@ -245,8 +278,8 @@ fun AddRecurringExpenseScreen(
                     Text(
                         text = "Category",
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF374151),
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 13.sp
                     )
                     Spacer(modifier = Modifier.height(6.dp))
@@ -254,27 +287,42 @@ fun AddRecurringExpenseScreen(
                         OutlinedButton(
                             onClick = { categoryExpanded = true },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(8.dp),
-                            border = BorderStroke(1.dp, Color(0xFFD1D5DB)),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF111827))
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(selectedCategory, fontSize = 14.sp)
-                                Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = Color(0xFF6B7280))
+                                Text(
+                                    selectedCategory,
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Icon(
+                                    Icons.Default.ArrowDropDown,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
 
                         DropdownMenu(
                             expanded = categoryExpanded,
-                            onDismissRequest = { categoryExpanded = false }
+                            onDismissRequest = { categoryExpanded = false },
+                            modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                         ) {
                             categories.forEach { category ->
                                 DropdownMenuItem(
-                                    text = { Text(category.name, fontSize = 14.sp) },
+                                    text = {
+                                        Text(
+                                            category.name,
+                                            fontSize = 14.sp,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    },
                                     onClick = {
                                         selectedCategory = category.name
                                         categoryExpanded = false
@@ -290,8 +338,8 @@ fun AddRecurringExpenseScreen(
                     Text(
                         text = "Payment Method",
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF374151),
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 13.sp
                     )
                     Spacer(modifier = Modifier.height(6.dp))
@@ -299,27 +347,42 @@ fun AddRecurringExpenseScreen(
                         OutlinedButton(
                             onClick = { paymentExpanded = true },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(8.dp),
-                            border = BorderStroke(1.dp, Color(0xFFD1D5DB)),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF111827))
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(selectedPaymentMethod, fontSize = 14.sp)
-                                Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = Color(0xFF6B7280))
+                                Text(
+                                    selectedPaymentMethod,
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Icon(
+                                    Icons.Default.ArrowDropDown,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
 
                         DropdownMenu(
                             expanded = paymentExpanded,
-                            onDismissRequest = { paymentExpanded = false }
+                            onDismissRequest = { paymentExpanded = false },
+                            modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                         ) {
                             paymentMethods.forEach { method ->
                                 DropdownMenuItem(
-                                    text = { Text(method, fontSize = 14.sp) },
+                                    text = {
+                                        Text(
+                                            method,
+                                            fontSize = 14.sp,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    },
                                     onClick = {
                                         selectedPaymentMethod = method
                                         paymentExpanded = false
@@ -335,21 +398,24 @@ fun AddRecurringExpenseScreen(
                     Text(
                         text = "Notes (Optional)",
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF374151),
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 13.sp
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     OutlinedTextField(
                         value = notes,
                         onValueChange = { notes = it },
-                        placeholder = { Text("Additional notes", color = Color(0xFF9CA3AF), fontSize = 14.sp) },
+                        placeholder = {
+                            Text(
+                                "Additional notes",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                fontSize = 14.sp
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = Color(0xFFD1D5DB),
-                            focusedBorderColor = Color(0xFF111827)
-                        )
+                        shape = RoundedCornerShape(10.dp),
+                        colors = textFieldColors
                     )
                 }
             }
@@ -365,11 +431,16 @@ fun AddRecurringExpenseScreen(
                 modifier = Modifier
                     .weight(1f)
                     .height(48.dp),
-                shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(1.dp, Color(0xFFD1D5DB)),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF374151))
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
             ) {
-                Text("Cancel", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                Text(
+                    "Cancel",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             }
 
             Button(
@@ -400,17 +471,17 @@ fun AddRecurringExpenseScreen(
                 modifier = Modifier
                     .weight(1f)
                     .height(48.dp),
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = BrandPrimary,
-                    disabledContainerColor = Color(0xFFE5E7EB)
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             ) {
                 Text(
                     text = if (existingExpense == null) "Save" else "Update",
                     fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = if (isFormValid) Color.White else Color(0xFF9CA3AF)
+                    fontWeight = FontWeight.Bold,
+                    color = if (isFormValid) Color.White else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                 )
             }
         }

@@ -9,10 +9,15 @@ import com.example.pbdassignment.core.model.IncomeItem
 import com.example.pbdassignment.core.model.IncomeStreams
 import com.example.pbdassignment.core.model.InvoiceStatus
 import com.example.pbdassignment.core.model.PaymentSource
+import com.example.pbdassignment.feature.income.data.IncomeRepositoryProvider
+import com.example.pbdassignment.feature.income.data.LocalIncomeRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
  * Centralized Repository managing state for all features.
@@ -53,20 +58,36 @@ object FinanceRepository {
     fun addIncome(income: IncomeItem) {
         upsertLocalIncome(income)
         com.example.pbdassignment.core.firebase.FirebaseManager.syncIncome(income)
+        IncomeRepositoryProvider.instance?.let { repo: LocalIncomeRepository ->
+            CoroutineScope(Dispatchers.IO).launch {
+                repo.addIncome(income)
+            }
+        }
     }
 
     fun updateInvoiceStatus(id: String, newStatus: InvoiceStatus) {
         _incomes.update { list ->
             list.map { if (it.id == id) it.copy(invoiceStatus = newStatus) else it }
         }
-        _incomes.value.find { it.id == id }?.let {
-            com.example.pbdassignment.core.firebase.FirebaseManager.syncIncome(it)
+        val updated = _incomes.value.find { it.id == id }
+        if (updated != null) {
+            com.example.pbdassignment.core.firebase.FirebaseManager.syncIncome(updated)
+            IncomeRepositoryProvider.instance?.let { repo: LocalIncomeRepository ->
+                CoroutineScope(Dispatchers.IO).launch {
+                    repo.updateIncome(updated)
+                }
+            }
         }
     }
 
     fun deleteIncome(id: String) {
         _incomes.update { list -> list.filterNot { it.id == id } }
         com.example.pbdassignment.core.firebase.FirebaseManager.deleteIncome(id)
+        IncomeRepositoryProvider.instance?.let { repo: LocalIncomeRepository ->
+            CoroutineScope(Dispatchers.IO).launch {
+                repo.deleteIncome(id)
+            }
+        }
     }
 
     // --- Expense Methods ---

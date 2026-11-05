@@ -44,9 +44,9 @@ import java.util.Locale
 @Composable
 fun GoalProgressCard(
     goal: GoalItem,
-    projectedMonths: Double,
+    projectedMonths: Double = 0.0,
     currencyFormatter: NumberFormat,
-    onQuickDeposit: (Double) -> Unit,
+    onQuickDeposit: ((Double) -> Unit)? = null,
     onEditGoal: () -> Unit
 ) {
     Card(
@@ -159,76 +159,6 @@ fun GoalProgressCard(
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Runway Estimation Text
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Req. Pace: LKR ${currencyFormatter.format(goal.requiredMonthlySavings)}/mo",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = "Runway: ~${String.format(Locale.US, "%.1f", projectedMonths)} mos",
-                    style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = if (projectedMonths <= goal.targetMonths) IncomeGreen else MaterialTheme.colorScheme.error
-                )
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Quick Deposit Pills
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedButton(
-                    onClick = { onQuickDeposit(5000.0) },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(42.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 0.dp)
-                ) {
-                    Text("+5k", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, maxLines = 1)
-                }
-                OutlinedButton(
-                    onClick = { onQuickDeposit(15000.0) },
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(42.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 0.dp)
-                ) {
-                    Text("+15k", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, maxLines = 1)
-                }
-                Button(
-                    onClick = { onQuickDeposit(goal.requiredDailySavings) },
-                    modifier = Modifier
-                        .weight(1.3f)
-                        .height(42.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = GoalGold),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 0.dp)
-                ) {
-                    Text(
-                        text = "Daily Save",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        maxLines = 1
                     )
                 }
             }
