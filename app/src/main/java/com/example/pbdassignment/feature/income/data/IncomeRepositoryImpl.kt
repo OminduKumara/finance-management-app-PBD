@@ -29,18 +29,27 @@ class IncomeRepositoryImpl(
                 val incomes = snapshot?.documents
                     ?.mapNotNull { doc ->
                         doc.toObject(IncomeDto::class.java)?.also { it.id = doc.id }?.toDomain()
-                    } ?: emptyList()
+                    }?.distinctBy { it.id }
+                    ?: emptyList()
                 trySend(incomes)
             }
         awaitClose { listener.remove() }
     }
     override suspend fun addIncome(income: IncomeRecord): Resource<Unit> {
         return try {
-            val docRef = firestore
-                .collection("users")
-                .document(income.userId)
-                .collection("incomes")
-                .document()
+            val docRef = if (income.id.isNotBlank()) {
+                firestore
+                    .collection("users")
+                    .document(income.userId)
+                    .collection("incomes")
+                    .document(income.id)
+            } else {
+                firestore
+                    .collection("users")
+                    .document(income.userId)
+                    .collection("incomes")
+                    .document()
+            }
             val dto = income.toDto().copy(id = docRef.id)
             docRef.set(dto).await()
             Resource.Success(Unit)

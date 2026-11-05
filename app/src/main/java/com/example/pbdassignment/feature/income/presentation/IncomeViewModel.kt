@@ -240,25 +240,28 @@ class IncomeViewModel(
             }
         }
         viewModelScope.launch {
-            val result = addIncomeUseCase.addIncome(record)
+            val incomeId = record.id.ifBlank { java.util.UUID.randomUUID().toString() }
+            val recordWithId = record.copy(id = incomeId)
+            val result = addIncomeUseCase.addIncome(recordWithId)
             if (result is Resource.Success) {
-                // Bridge: also push to FinanceRepository so Dashboard/Analytics stay correct
-                FinanceRepository.addIncome(
-                    IncomeItem(
-                        streamType = record.source.displayName,
-                        title = record.title,
-                        clientOrSource = record.clientName ?: "",
-                        rawAmount = record.originalAmount,
-                        currency = record.currency.symbol,
-                        exchangeRate = record.exchangeRate,
-                        invoiceStatus = when (record.milestoneStatus) {
-                            MilestoneStatus.PENDING -> InvoiceStatus.INVOICED_PENDING
-                            MilestoneStatus.INVOICED -> InvoiceStatus.INVOICED_PENDING
-                            MilestoneStatus.RECEIVED -> InvoiceStatus.RECEIVED
-                            null -> InvoiceStatus.RECEIVED
-                        }
-                    )
+                val incomeItem = IncomeItem(
+                    id = incomeId,
+                    streamType = record.source.displayName,
+                    title = record.title,
+                    clientOrSource = record.clientName ?: "",
+                    rawAmount = record.originalAmount,
+                    currency = record.currency.symbol,
+                    exchangeRate = record.exchangeRate,
+                    lkrAmount = record.convertedAmountLkr,
+                    invoiceStatus = when (record.milestoneStatus) {
+                        MilestoneStatus.PENDING -> InvoiceStatus.INVOICED_PENDING
+                        MilestoneStatus.INVOICED -> InvoiceStatus.INVOICED_PENDING
+                        MilestoneStatus.RECEIVED -> InvoiceStatus.RECEIVED
+                        null -> InvoiceStatus.RECEIVED
+                    }
                 )
+                FinanceRepository.upsertLocalIncome(incomeItem)
+                com.example.pbdassignment.feature.income.data.IncomeRepositoryProvider.instance?.addIncome(incomeItem)
                 _uiState.update { it.copy(successMessage = "Income saved!", showAddIncomeSheet = false) }
             } else if (result is Resource.Error) {
                 _uiState.update { it.copy(errorMessage = result.message) }
