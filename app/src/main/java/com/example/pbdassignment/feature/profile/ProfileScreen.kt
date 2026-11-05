@@ -67,6 +67,12 @@ fun ProfileScreen(
     val currentUser by FirebaseManager.currentUser.collectAsState()
     val baseline by FinanceRepository.baseline.collectAsState()
 
+    val displayName = remember(currentUser) {
+        currentUser?.displayName?.takeIf { it.isNotBlank() }
+            ?: currentUser?.email?.substringBefore('@')?.replaceFirstChar { it.uppercase() }
+            ?: "Kavindu Silva"
+    }
+
     var showEditBaselineDialog by remember { mutableStateOf(false) }
     var newRuleText by remember { mutableStateOf("") }
 
@@ -147,7 +153,11 @@ fun ProfileScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Personal Finance Account",
+                            text = if (currentUser?.email == null || currentUser?.email?.contains("kavindu") == true) {
+                                "Junior Software Engineer • Colombo"
+                            } else {
+                                "Personal Account"
+                            },
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
