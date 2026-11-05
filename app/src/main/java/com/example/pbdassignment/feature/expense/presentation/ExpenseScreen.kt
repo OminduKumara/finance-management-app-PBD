@@ -42,6 +42,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pbdassignment.core.data.FinanceRepository
+import com.example.pbdassignment.core.model.ExpenseItem
+import com.example.pbdassignment.core.model.ExpenseNature
+import com.example.pbdassignment.core.model.PaymentSource
 import com.example.pbdassignment.feature.category.data.RoomCategoryRepository
 import com.example.pbdassignment.feature.category.presentation.CategoryManagementScreen
 import com.example.pbdassignment.feature.category.presentation.CategoryViewModel
@@ -80,6 +84,10 @@ fun ExpenseScreen() {
         factory = RecurringExpenseViewModelFactory(recurringRepository)
     )
 
+    val expenses by expenseViewModel.expenses.collectAsState()
+    val categories by categoryViewModel.categories.collectAsState()
+    val recurringExpenses by recurringViewModel.recurringExpenses.collectAsState()
+
     LaunchedEffect(Unit) {
         categoryViewModel.insertDefaultCategories()
     }
@@ -88,14 +96,32 @@ fun ExpenseScreen() {
         recurringGenerator.generateDueExpenses()
     }
 
+    LaunchedEffect(expenses) {
+        if (expenses.isNotEmpty()) {
+            expenses.forEach { expense ->
+                FinanceRepository.addExpense(
+                    ExpenseItem(
+                        id = expense.id,
+                        amount = expense.amount,
+                        category = expense.categoryName,
+                        nature = if (expense.isCommitted) ExpenseNature.COMMITTED else ExpenseNature.DISCRETIONARY,
+                        paymentSource = when (expense.paymentMethod.lowercase()) {
+                            "credit card", "credit_card", "card" -> PaymentSource.PRIMARY_CARD
+                            "bank transfer", "debit card" -> PaymentSource.SECONDARY_ACCOUNT
+                            else -> PaymentSource.CASH
+                        },
+                        merchantPreset = expense.title,
+                        notes = expense.title
+                    )
+                )
+            }
+        }
+    }
+
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     var activeModalView by remember { mutableStateOf<String?>(null) } // "add_expense", "add_recurring"
     var expenseToEdit by remember { mutableStateOf<Expense?>(null) }
     var editingRecurringExpense by remember { mutableStateOf<RecurringExpense?>(null) }
-
-    val expenses by expenseViewModel.expenses.collectAsState()
-    val categories by categoryViewModel.categories.collectAsState()
-    val recurringExpenses by recurringViewModel.recurringExpenses.collectAsState()
 
     val currencyFormatter = remember {
         NumberFormat.getNumberInstance(Locale.US).apply {
