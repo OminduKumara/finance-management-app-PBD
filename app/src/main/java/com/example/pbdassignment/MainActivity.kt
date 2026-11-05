@@ -49,12 +49,26 @@ class MainActivity : ComponentActivity() {
                     RoomExpenseRepository(database.expenseDao())
                 }
 
+                val incomeRepository = remember {
+                    com.example.pbdassignment.feature.income.data.RoomIncomeRepository(database.incomeDao()).also {
+                        com.example.pbdassignment.feature.income.data.IncomeRepositoryProvider.instance = it
+                    }
+                }
+
                 LaunchedEffect(Unit) {
                     categoryViewModel.insertDefaultCategories()
                 }
 
                 LaunchedEffect(Unit) {
                     recurringExpenseGenerator.generateDueExpenses()
+                }
+
+                LaunchedEffect(Unit) {
+                    incomeRepository.observeIncomes().collect { roomIncomes ->
+                        roomIncomes.forEach { income ->
+                            FinanceRepository.upsertLocalIncome(income)
+                        }
+                    }
                 }
 
                 LaunchedEffect(Unit) {

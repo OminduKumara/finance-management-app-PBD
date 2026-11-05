@@ -1,5 +1,6 @@
-﻿package com.example.pbdassignment.feature.income.components
+package com.example.pbdassignment.feature.income.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,10 +15,14 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -27,10 +32,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.pbdassignment.core.model.IncomeStreams
+import com.example.pbdassignment.ui.theme.BrandPrimary
 
 @Composable
 fun AddIncomeDialog(
@@ -55,19 +63,45 @@ fun AddIncomeDialog(
     var isPendingInvoice by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
+    val dialogTextFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = BrandPrimary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+        focusedLabelColor = BrandPrimary,
+        unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+        focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        focusedContainerColor = Color.Transparent,
+        unfocusedContainerColor = Color.Transparent,
+        cursorColor = BrandPrimary
+    )
+
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(20.dp),
         title = {
-            Text("Add Income / Inflow", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(
+                text = "Add Income / Inflow",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
         },
         text = {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                Text("Income Stream", style = MaterialTheme.typography.labelMedium)
+                Text(
+                    text = "Income Stream",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -75,8 +109,9 @@ fun AddIncomeDialog(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     IncomeStreams.defaultStreams.forEach { stream ->
+                        val isSelected = selectedStream == stream
                         FilterChip(
-                            selected = selectedStream == stream,
+                            selected = isSelected,
                             onClick = {
                                 selectedStream = stream
                                 isUsd = stream == IncomeStreams.ADSENSE
@@ -91,7 +126,24 @@ fun AddIncomeDialog(
                                     }
                                 }
                             },
-                            label = { Text(stream) }
+                            label = {
+                                Text(
+                                    text = stream,
+                                    fontSize = 12.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                )
+                            },
+                            shape = RoundedCornerShape(10.dp),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = BrandPrimary.copy(alpha = 0.2f),
+                                selectedLabelColor = BrandPrimary,
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                                labelColor = MaterialTheme.colorScheme.onSurface
+                            ),
+                            border = BorderStroke(
+                                1.dp,
+                                if (isSelected) BrandPrimary else MaterialTheme.colorScheme.outline
+                            )
                         )
                     }
                 }
@@ -103,7 +155,9 @@ fun AddIncomeDialog(
                         label = { Text("Custom Stream Name") },
                         placeholder = { Text("e.g. Tutoring, Consulting, Dividends") },
                         singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = dialogTextFieldColors
                     )
                 }
 
@@ -113,7 +167,9 @@ fun AddIncomeDialog(
                     label = { Text("Income Title") },
                     placeholder = { Text("e.g. React Milestone, Bonus, Client Fee") },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = dialogTextFieldColors
                 )
 
                 OutlinedTextField(
@@ -122,16 +178,21 @@ fun AddIncomeDialog(
                     label = { Text("Payer / Client / Source") },
                     placeholder = { Text("e.g. Local SME, Startup, Binance") },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = dialogTextFieldColors
                 )
 
                 OutlinedTextField(
                     value = amountText,
                     onValueChange = { amountText = it },
                     label = { Text(if (isUsd) "Amount in USD ($)" else "Amount in LKR") },
+                    placeholder = { Text("0.00") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = dialogTextFieldColors
                 )
 
                 // Currency Toggle
@@ -142,13 +203,47 @@ fun AddIncomeDialog(
                     FilterChip(
                         selected = !isUsd,
                         onClick = { isUsd = false },
-                        label = { Text("LKR (Local)") },
+                        label = {
+                            Text(
+                                "LKR (Local)",
+                                fontSize = 12.sp,
+                                fontWeight = if (!isUsd) FontWeight.Bold else FontWeight.Medium
+                            )
+                        },
+                        shape = RoundedCornerShape(10.dp),
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = BrandPrimary.copy(alpha = 0.2f),
+                            selectedLabelColor = BrandPrimary,
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                            labelColor = MaterialTheme.colorScheme.onSurface
+                        ),
+                        border = BorderStroke(
+                            1.dp,
+                            if (!isUsd) BrandPrimary else MaterialTheme.colorScheme.outline
+                        ),
                         modifier = Modifier.weight(1f)
                     )
                     FilterChip(
                         selected = isUsd,
                         onClick = { isUsd = true },
-                        label = { Text("USD ($)") },
+                        label = {
+                            Text(
+                                "USD ($)",
+                                fontSize = 12.sp,
+                                fontWeight = if (isUsd) FontWeight.Bold else FontWeight.Medium
+                            )
+                        },
+                        shape = RoundedCornerShape(10.dp),
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = BrandPrimary.copy(alpha = 0.2f),
+                            selectedLabelColor = BrandPrimary,
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                            labelColor = MaterialTheme.colorScheme.onSurface
+                        ),
+                        border = BorderStroke(
+                            1.dp,
+                            if (isUsd) BrandPrimary else MaterialTheme.colorScheme.outline
+                        ),
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -158,9 +253,12 @@ fun AddIncomeDialog(
                         value = exchangeRateText,
                         onValueChange = { exchangeRateText = it },
                         label = { Text("USD to LKR Exchange Rate") },
+                        placeholder = { Text("302.50") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = dialogTextFieldColors
                     )
                 }
 
@@ -170,16 +268,26 @@ fun AddIncomeDialog(
                 ) {
                     Checkbox(
                         checked = isPendingInvoice,
-                        onCheckedChange = { isPendingInvoice = it }
+                        onCheckedChange = { isPendingInvoice = it },
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = BrandPrimary,
+                            checkmarkColor = Color.White
+                        )
                     )
-                    Text("Unpaid / Pending Invoice", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        text = "Unpaid / Pending Invoice",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
 
                 if (errorMessage != null) {
                     Text(
                         text = errorMessage!!,
                         color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }
@@ -209,14 +317,23 @@ fun AddIncomeDialog(
                         )
                     }
                 },
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = BrandPrimary)
             ) {
-                Text("Save Income")
+                Text(
+                    text = "Save Income",
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(
+                    text = "Cancel",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Medium
+                )
             }
         }
     )

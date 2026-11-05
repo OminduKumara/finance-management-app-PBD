@@ -1,4 +1,4 @@
-﻿package com.example.pbdassignment
+package com.example.pbdassignment
 
 import com.example.pbdassignment.core.model.DefaultExpenseCategories
 import com.example.pbdassignment.core.model.ExpenseItem
@@ -8,6 +8,8 @@ import com.example.pbdassignment.core.model.IncomeItem
 import com.example.pbdassignment.core.model.IncomeStreams
 import com.example.pbdassignment.core.model.InvoiceStatus
 import com.example.pbdassignment.core.model.PaymentSource
+import com.example.pbdassignment.feature.income.data.toIncomeEntity
+import com.example.pbdassignment.feature.income.data.toIncomeItem
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -95,5 +97,42 @@ class FinanceLogicUnitTest {
         val isLeakAlert = diningTotal >= threshold
 
         assertTrue("Dining total should trigger spending leak alert", isLeakAlert)
+    }
+
+    @Test
+    fun testIncomeEntityMappingRoundTrip() {
+        val original = IncomeItem(
+            id = "income_test_123",
+            streamType = IncomeStreams.FREELANCE,
+            title = "Mobile App Design",
+            clientOrSource = "Fintech Client",
+            rawAmount = 1200.0,
+            currency = "USD",
+            exchangeRate = 300.0,
+            lkrAmount = 360000.0,
+            date = 1700000000000L,
+            invoiceStatus = InvoiceStatus.SETTLED,
+            dueDate = 1700500000000L,
+            isSweptToGoal = true,
+            goalSweptAmount = 180000.0
+        )
+
+        val entity = original.toIncomeEntity()
+        assertEquals(original.id, entity.id)
+        assertEquals(original.streamType, entity.streamType)
+        assertEquals(original.title, entity.title)
+        assertEquals(original.clientOrSource, entity.clientOrSource)
+        assertEquals(original.rawAmount, entity.rawAmount, 0.001)
+        assertEquals(original.currency, entity.currency)
+        assertEquals(original.exchangeRate, entity.exchangeRate, 0.001)
+        assertEquals(original.lkrAmount, entity.lkrAmount, 0.001)
+        assertEquals(original.date, entity.date)
+        assertEquals(original.invoiceStatus.name, entity.invoiceStatus)
+        assertEquals(original.dueDate, entity.dueDate)
+        assertEquals(original.isSweptToGoal, entity.isSweptToGoal)
+        assertEquals(original.goalSweptAmount, entity.goalSweptAmount, 0.001)
+
+        val restored = entity.toIncomeItem()
+        assertEquals(original, restored)
     }
 }

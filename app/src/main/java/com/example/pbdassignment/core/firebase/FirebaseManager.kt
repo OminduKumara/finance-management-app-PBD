@@ -18,6 +18,11 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.example.pbdassignment.feature.income.data.IncomeRepositoryProvider
+import com.example.pbdassignment.feature.income.data.LocalIncomeRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,6 +36,10 @@ object FirebaseManager {
     private val _currentUser = MutableStateFlow<FirebaseUser?>(null)
     val currentUser: StateFlow<FirebaseUser?> = _currentUser.asStateFlow()
 
+    private val _customDisplayName = MutableStateFlow<String?>(null)
+    val customDisplayName: StateFlow<String?> = _customDisplayName.asStateFlow()
+
+    private var userListener: ListenerRegistration? = null
     private var incomeListener: ListenerRegistration? = null
     private var expenseListener: ListenerRegistration? = null
     private var goalListener: ListenerRegistration? = null
@@ -104,18 +113,61 @@ object FirebaseManager {
             }
     }
 
+    fun updateDisplayName(newName: String, onResult: (Boolean, String?) -> Unit) {
+        val trimmed = newName.trim()
+        if (trimmed.isBlank()) {
+            onResult(false, "User name cannot be empty")
+            return
+        }
+        _customDisplayName.value = trimmed
+        val user = auth.currentUser
+        if (user == null) {
+            onResult(true, null)
+            return
+        }
+
+        val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
+            .setDisplayName(trimmed)
+            .build()
+
+        user.updateProfile(profileUpdates)
+            .addOnCompleteListener {
+                firestore.collection("users").document(user.uid)
+                    .set(mapOf("displayName" to trimmed, "name" to trimmed), com.google.firebase.firestore.SetOptions.merge())
+                    .addOnFailureListener { e -> Log.w(TAG, "Save name to Firestore failed: ${e.message}") }
+                _currentUser.value = auth.currentUser
+                onResult(true, null)
+            }
+    }
+
     fun signOut() {
         auth.signOut()
         _currentUser.value = null
+        _customDisplayName.value = null
         detachListeners()
         FinanceRepository.clearLocalData()
         (com.example.pbdassignment.feature.goals.GoalRepositoryProvider.instance as? com.example.pbdassignment.data.repository.GoalRepositoryImpl)?.clearLocalGoals()
+        IncomeRepositoryProvider.instance?.let { repo: LocalIncomeRepository ->
+            CoroutineScope(Dispatchers.IO).launch {
+                repo.clearIncomes()
+            }
+        }
     }
 
     // --- Firestore Realtime Synchronization ---
 
     fun attachRealtimeListeners(userId: String) {
         detachListeners()
+
+        userListener = firestore.collection("users").document(userId)
+            .addSnapshotListener { snapshot, _ ->
+                if (snapshot != null && snapshot.exists()) {
+                    val name = snapshot.getString("displayName") ?: snapshot.getString("name")
+                    if (!name.isNullOrBlank()) {
+                        _customDisplayName.value = name
+                    }
+                }
+            }
 
         // Listen to Incomes
         incomeListener = firestore.collection("users").document(userId)
@@ -145,6 +197,11 @@ object FirebaseManager {
                     }
                     if (remoteIncomes.isNotEmpty()) {
                         remoteIncomes.forEach { FinanceRepository.upsertLocalIncome(it) }
+                        IncomeRepositoryProvider.instance?.let { repo: LocalIncomeRepository ->
+                            CoroutineScope(Dispatchers.IO).launch {
+                                remoteIncomes.forEach { repo.addIncome(it) }
+                            }
+                        }
                     }
                 }
             }
@@ -402,6 +459,8 @@ object FirebaseManager {
     }
 
     private fun detachListeners() {
+        userListener?.remove()
+        userListener = null
         incomeListener?.remove()
         incomeListener = null
         expenseListener?.remove()

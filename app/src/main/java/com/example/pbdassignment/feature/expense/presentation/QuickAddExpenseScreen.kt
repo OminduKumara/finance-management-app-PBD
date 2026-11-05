@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -98,6 +96,18 @@ fun QuickAddExpenseScreen(
     val isAmountValid = parsedAmount != null && parsedAmount > 0
     val isFormValid = title.isNotBlank() && isAmountValid
 
+    val textFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = BrandPrimary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+        focusedContainerColor = Color.Transparent,
+        unfocusedContainerColor = Color.Transparent,
+        focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        cursorColor = BrandPrimary
+    )
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -148,22 +158,25 @@ fun QuickAddExpenseScreen(
                     Text(
                         text = "Title",
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF374151),
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 13.sp
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     OutlinedTextField(
                         value = title,
                         onValueChange = { title = it },
-                        placeholder = { Text("e.g. Netflix, Keells, Rent", color = Color(0xFF9CA3AF), fontSize = 14.sp) },
+                        placeholder = {
+                            Text(
+                                "e.g. Netflix, Keells, Rent",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                fontSize = 14.sp
+                            )
+                        },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(10.dp),
                         singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = Color(0xFFD1D5DB),
-                            focusedBorderColor = Color(0xFF111827)
-                        )
+                        colors = textFieldColors
                     )
                 }
 
@@ -172,23 +185,26 @@ fun QuickAddExpenseScreen(
                     Text(
                         text = "Amount (LKR)",
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF374151),
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 13.sp
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     OutlinedTextField(
                         value = amountText,
                         onValueChange = { amountText = it },
-                        placeholder = { Text("0.00", color = Color(0xFF9CA3AF), fontSize = 14.sp) },
+                        placeholder = {
+                            Text(
+                                "0.00",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                fontSize = 14.sp
+                            )
+                        },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(10.dp),
                         singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = Color(0xFFD1D5DB),
-                            focusedBorderColor = Color(0xFF111827)
-                        )
+                        colors = textFieldColors
                     )
                 }
 
@@ -197,8 +213,8 @@ fun QuickAddExpenseScreen(
                     Text(
                         text = "Category",
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF374151),
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 13.sp
                     )
                     Spacer(modifier = Modifier.height(6.dp))
@@ -206,27 +222,42 @@ fun QuickAddExpenseScreen(
                         OutlinedButton(
                             onClick = { categoryMenuExpanded = true },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(8.dp),
-                            border = BorderStroke(1.dp, Color(0xFFD1D5DB)),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF111827))
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(selectedCategory, fontSize = 14.sp)
-                                Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = Color(0xFF6B7280))
+                                Text(
+                                    selectedCategory,
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Icon(
+                                    Icons.Default.ArrowDropDown,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
 
                         DropdownMenu(
                             expanded = categoryMenuExpanded,
-                            onDismissRequest = { categoryMenuExpanded = false }
+                            onDismissRequest = { categoryMenuExpanded = false },
+                            modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                         ) {
                             categories.forEach { category ->
                                 DropdownMenuItem(
-                                    text = { Text(category.name, fontSize = 14.sp) },
+                                    text = {
+                                        Text(
+                                            category.name,
+                                            fontSize = 14.sp,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    },
                                     onClick = {
                                         selectedCategory = category.name
                                         categoryMenuExpanded = false
@@ -242,8 +273,8 @@ fun QuickAddExpenseScreen(
                     Text(
                         text = "Type",
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF374151),
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 13.sp
                     )
                     Spacer(modifier = Modifier.height(6.dp))
@@ -254,29 +285,47 @@ fun QuickAddExpenseScreen(
                         FilterChip(
                             selected = isCommitted,
                             onClick = { isCommitted = true },
-                            label = { Text("Fixed (Bill / Rent)", fontSize = 12.sp) },
-                            shape = RoundedCornerShape(8.dp),
+                            label = {
+                                Text(
+                                    "Fixed (Bill / Rent)",
+                                    fontSize = 12.sp,
+                                    fontWeight = if (isCommitted) FontWeight.Bold else FontWeight.Medium
+                                )
+                            },
+                            shape = RoundedCornerShape(10.dp),
                             colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = Color(0xFF1F2937),
-                                selectedLabelColor = Color.White,
-                                containerColor = Color.Transparent,
-                                labelColor = Color(0xFF4B5563)
+                                selectedContainerColor = BrandPrimary.copy(alpha = 0.2f),
+                                selectedLabelColor = BrandPrimary,
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                                labelColor = MaterialTheme.colorScheme.onSurface
                             ),
-                            border = BorderStroke(1.dp, if (isCommitted) Color(0xFF1F2937) else Color(0xFFD1D5DB)),
+                            border = BorderStroke(
+                                1.dp,
+                                if (isCommitted) BrandPrimary else MaterialTheme.colorScheme.outline
+                            ),
                             modifier = Modifier.weight(1f)
                         )
                         FilterChip(
                             selected = !isCommitted,
                             onClick = { isCommitted = false },
-                            label = { Text("Lifestyle", fontSize = 12.sp) },
-                            shape = RoundedCornerShape(8.dp),
+                            label = {
+                                Text(
+                                    "Lifestyle",
+                                    fontSize = 12.sp,
+                                    fontWeight = if (!isCommitted) FontWeight.Bold else FontWeight.Medium
+                                )
+                            },
+                            shape = RoundedCornerShape(10.dp),
                             colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = Color(0xFF1F2937),
-                                selectedLabelColor = Color.White,
-                                containerColor = Color.Transparent,
-                                labelColor = Color(0xFF4B5563)
+                                selectedContainerColor = BrandPrimary.copy(alpha = 0.2f),
+                                selectedLabelColor = BrandPrimary,
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                                labelColor = MaterialTheme.colorScheme.onSurface
                             ),
-                            border = BorderStroke(1.dp, if (!isCommitted) Color(0xFF1F2937) else Color(0xFFD1D5DB)),
+                            border = BorderStroke(
+                                1.dp,
+                                if (!isCommitted) BrandPrimary else MaterialTheme.colorScheme.outline
+                            ),
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -287,8 +336,8 @@ fun QuickAddExpenseScreen(
                     Text(
                         text = "Payment Method",
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF374151),
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 13.sp
                     )
                     Spacer(modifier = Modifier.height(6.dp))
@@ -296,27 +345,42 @@ fun QuickAddExpenseScreen(
                         OutlinedButton(
                             onClick = { paymentMenuExpanded = true },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(8.dp),
-                            border = BorderStroke(1.dp, Color(0xFFD1D5DB)),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF111827))
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(selectedPaymentMethod, fontSize = 14.sp)
-                                Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = Color(0xFF6B7280))
+                                Text(
+                                    selectedPaymentMethod,
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Icon(
+                                    Icons.Default.ArrowDropDown,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
 
                         DropdownMenu(
                             expanded = paymentMenuExpanded,
-                            onDismissRequest = { paymentMenuExpanded = false }
+                            onDismissRequest = { paymentMenuExpanded = false },
+                            modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                         ) {
                             paymentMethods.forEach { method ->
                                 DropdownMenuItem(
-                                    text = { Text(method, fontSize = 14.sp) },
+                                    text = {
+                                        Text(
+                                            method,
+                                            fontSize = 14.sp,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    },
                                     onClick = {
                                         selectedPaymentMethod = method
                                         paymentMenuExpanded = false
@@ -339,11 +403,16 @@ fun QuickAddExpenseScreen(
                 modifier = Modifier
                     .weight(1f)
                     .height(48.dp),
-                shape = RoundedCornerShape(8.dp),
-                border = BorderStroke(1.dp, Color(0xFFD1D5DB)),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF374151))
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
             ) {
-                Text("Cancel", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                Text(
+                    "Cancel",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             }
 
             Button(
@@ -356,17 +425,17 @@ fun QuickAddExpenseScreen(
                 modifier = Modifier
                     .weight(1f)
                     .height(48.dp),
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = BrandPrimary,
-                    disabledContainerColor = Color(0xFFE5E7EB)
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
                 )
             ) {
                 Text(
                     text = if (initialExpense == null) "Save" else "Update",
                     fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = if (isFormValid) Color.White else Color(0xFF9CA3AF)
+                    fontWeight = FontWeight.Bold,
+                    color = if (isFormValid) Color.White else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                 )
             }
         }

@@ -62,9 +62,17 @@ import java.util.Locale
 
 @Composable
 fun IncomeScreen(
-    viewModel: IncomeViewModel = viewModel()
+    viewModel: IncomeViewModel? = null
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val activeViewModel: IncomeViewModel = viewModel ?: run {
+        val repo = com.example.pbdassignment.feature.income.data.IncomeRepositoryProvider.instance
+            ?: com.example.pbdassignment.feature.income.data.RoomIncomeRepository(
+                com.example.pbdassignment.feature.expense.data.AppDatabase.getInstance(context).incomeDao()
+            ).also { com.example.pbdassignment.feature.income.data.IncomeRepositoryProvider.instance = it }
+        viewModel(factory = IncomeViewModelFactory(repo))
+    }
+    val uiState by activeViewModel.uiState.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
 
     val currencyFormatter = remember {
@@ -168,7 +176,7 @@ fun IncomeScreen(
                 ) {
                     FilterChip(
                         selected = uiState.selectedFilter == null,
-                        onClick = { viewModel.setFilter(null) },
+                        onClick = { activeViewModel.setFilter(null) },
                         label = { Text("All Streams") },
                         shape = RoundedCornerShape(10.dp),
                         colors = FilterChipDefaults.filterChipColors(
@@ -179,7 +187,7 @@ fun IncomeScreen(
                     com.example.pbdassignment.core.model.IncomeStreams.defaultStreams.forEach { stream ->
                         FilterChip(
                             selected = uiState.selectedFilter == stream,
-                            onClick = { viewModel.setFilter(stream) },
+                            onClick = { activeViewModel.setFilter(stream) },
                             label = { Text(stream) },
                             shape = RoundedCornerShape(10.dp),
                             colors = FilterChipDefaults.filterChipColors(
@@ -213,9 +221,9 @@ fun IncomeScreen(
                         item = item,
                         currencyFormatter = currencyFormatter,
                         onSettleInvoice = { id, sweepToGoal ->
-                            viewModel.markInvoiceSettled(id, sweepPercentage = if (sweepToGoal) 50 else 0)
+                            activeViewModel.markInvoiceSettled(id, sweepPercentage = if (sweepToGoal) 50 else 0)
                         },
-                        onDelete = { viewModel.deleteIncome(item.id) }
+                        onDelete = { activeViewModel.deleteIncome(item.id) }
                     )
                 }
             }
@@ -229,7 +237,7 @@ fun IncomeScreen(
             AddIncomeDialog(
                 onDismiss = { showAddDialog = false },
                 onConfirm = { type, title, source, amount, currency, rate, isPending ->
-                    viewModel.addIncome(type, title, source, amount, currency, rate, isPending)
+                    activeViewModel.addIncome(type, title, source, amount, currency, rate, isPending)
                     showAddDialog = false
                 }
             )

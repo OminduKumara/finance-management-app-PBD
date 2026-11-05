@@ -35,6 +35,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -65,14 +66,15 @@ fun ProfileScreen(
     onSignOut: () -> Unit = {}
 ) {
     val currentUser by FirebaseManager.currentUser.collectAsState()
+    val customDisplayName by FirebaseManager.customDisplayName.collectAsState()
     val baseline by FinanceRepository.baseline.collectAsState()
 
-    val displayName = remember(currentUser) {
-        currentUser?.displayName?.takeIf { it.isNotBlank() }
-            ?: currentUser?.email?.substringBefore('@')?.replaceFirstChar { it.uppercase() }
-            ?: "Kavindu Silva"
-    }
+    val currentUserName = customDisplayName?.takeIf { it.isNotBlank() }
+        ?: currentUser?.displayName?.takeIf { it.isNotBlank() }
+        ?: currentUser?.email?.substringBefore('@')?.replaceFirstChar { it.uppercase() }
+        ?: "Personal Finance User"
 
+    var showEditNameDialog by remember { mutableStateOf(false) }
     var showEditBaselineDialog by remember { mutableStateOf(false) }
     var newRuleText by remember { mutableStateOf("") }
 
@@ -124,48 +126,60 @@ fun ProfileScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(54.dp)
-                            .clip(CircleShape)
-                            .background(BrandPrimary.copy(alpha = 0.12f)),
-                        contentAlignment = Alignment.Center
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            Icons.Default.Person,
-                            contentDescription = null,
-                            tint = BrandPrimary,
-                            modifier = Modifier.size(28.dp)
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(54.dp)
+                                .clip(CircleShape)
+                                .background(BrandPrimary.copy(alpha = 0.12f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Default.Person,
+                                contentDescription = null,
+                                tint = BrandPrimary,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.size(14.dp))
+
+                        Column {
+                            Text(
+                                text = currentUserName,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Personal Account",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = currentUser?.email?.takeIf { it.isNotBlank() } ?: "Active Session",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = BrandPrimary,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
 
-                    Spacer(modifier = Modifier.size(14.dp))
-
-                    Column {
-                        Text(
-                            text = currentUser?.displayName?.takeIf { it.isNotBlank() }
-                                ?: currentUser?.email?.substringBefore("@")?.takeIf { it.isNotBlank() }
-                                ?: "Personal Finance User",
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = if (currentUser?.email == null || currentUser?.email?.contains("kavindu") == true) {
-                                "Junior Software Engineer • Colombo"
-                            } else {
-                                "Personal Account"
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = currentUser?.email?.takeIf { it.isNotBlank() } ?: "Guest Session",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = BrandPrimary,
-                            fontWeight = FontWeight.Medium
+                    IconButton(
+                        onClick = { showEditNameDialog = true },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Edit,
+                            contentDescription = "Edit User Name",
+                            tint = BrandPrimary,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }
@@ -458,6 +472,102 @@ fun ProfileScreen(
                 FinanceRepository.updateBaseline(updated)
                 showEditBaselineDialog = false
             }
+        )
+    }
+
+    if (showEditNameDialog) {
+        var tempName by remember { mutableStateOf(currentUserName) }
+        var isSavingName by remember { mutableStateOf(false) }
+        var nameError by remember { mutableStateOf<String?>(null) }
+
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { if (!isSavingName) showEditNameDialog = false },
+            title = {
+                Text(
+                    text = "Edit Account Name",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        text = "Update the display name associated with your account.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    OutlinedTextField(
+                        value = tempName,
+                        onValueChange = {
+                            tempName = it
+                            nameError = null
+                        },
+                        placeholder = { Text("Enter your name") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = BrandPrimary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                        )
+                    )
+                    if (nameError != null) {
+                        Text(
+                            text = nameError!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val trimmed = tempName.trim()
+                        if (trimmed.isBlank()) {
+                            nameError = "Name cannot be empty"
+                            return@Button
+                        }
+                        isSavingName = true
+                        FirebaseManager.updateDisplayName(trimmed) { success, error ->
+                            isSavingName = false
+                            if (success) {
+                                showEditNameDialog = false
+                            } else {
+                                nameError = error ?: "Failed to update name"
+                            }
+                        }
+                    },
+                    enabled = !isSavingName && tempName.isNotBlank(),
+                    colors = ButtonDefaults.buttonColors(containerColor = BrandPrimary),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    if (isSavingName) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Save", fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { showEditNameDialog = false },
+                    enabled = !isSavingName,
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                ) {
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurface)
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(20.dp)
         )
     }
 }
