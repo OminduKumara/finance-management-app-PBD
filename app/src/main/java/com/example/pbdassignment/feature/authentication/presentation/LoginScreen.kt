@@ -125,6 +125,20 @@ fun LoginScreen(
             TextButton(onClick = onNavigateToRegister) {
                 Text("Don't have an account? Sign up")
             }
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedButton(
+                onClick = {
+                    com.example.pbdassignment.core.firebase.FirebaseManager.signInAsDemoKavindu { success, _ ->
+                        if (success) onLoginSuccess()
+                    }
+                },
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+            ) {
+                Text("?? Launch as Kavindu Silva (Live Demo)")
+            }
         }
     }
 }
