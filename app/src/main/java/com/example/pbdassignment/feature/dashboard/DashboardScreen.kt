@@ -51,6 +51,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pbdassignment.core.firebase.FirebaseManager
 import com.example.pbdassignment.feature.dashboard.components.EditGoalDialog
 import com.example.pbdassignment.feature.dashboard.components.GoalProgressCard
 import com.example.pbdassignment.feature.dashboard.components.SpendingRatioCard
@@ -72,6 +73,12 @@ fun DashboardScreen(
     onNavigateToGoals: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val currentUser by FirebaseManager.currentUser.collectAsState()
+    val displayName = remember(currentUser) {
+        currentUser?.displayName?.takeIf { it.isNotBlank() }
+            ?: currentUser?.email?.substringBefore('@')?.replaceFirstChar { it.uppercase() }
+            ?: "User"
+    }
     var showEditGoalDialog by remember { mutableStateOf(false) }
 
     val currencyFormatter = remember {
@@ -97,7 +104,7 @@ fun DashboardScreen(
             ) {
                 Column {
                     Text(
-                        text = "Hello, Kavindu 👋",
+                        text = "Hello, $displayName 👋",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.ExtraBold
                     )
