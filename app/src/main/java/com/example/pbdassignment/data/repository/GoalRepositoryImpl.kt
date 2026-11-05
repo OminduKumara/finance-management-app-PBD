@@ -1,8 +1,10 @@
 package com.example.pbdassignment.data.repository
 
 import android.util.Log
+import com.example.pbdassignment.core.data.FinanceRepository
 import com.example.pbdassignment.core.firebase.FirebaseManager
 import com.example.pbdassignment.core.model.GoalContribution
+import com.example.pbdassignment.core.model.GoalItem
 import com.example.pbdassignment.core.model.SavingsGoal
 import com.example.pbdassignment.domain.repository.GoalRepository
 import com.google.firebase.firestore.FirebaseFirestore
@@ -21,7 +23,7 @@ import kotlinx.coroutines.flow.update
  * Maintains an in-memory cache to guarantee instantaneous UI updates and offline resilience.
  */
 class GoalRepositoryImpl(
-    initialGoals: List<SavingsGoal> = listOf(SavingsGoal.createDefaultMacBookGoal()),
+    initialGoals: List<SavingsGoal> = emptyList(),
     private val getFirestore: () -> FirebaseFirestore? = {
         try {
             FirebaseFirestore.getInstance()
@@ -32,6 +34,23 @@ class GoalRepositoryImpl(
 ) : GoalRepository {
 
     private val _goals = MutableStateFlow(initialGoals)
+
+    fun clearLocalGoals() {
+        _goals.value = emptyList()
+    }
+
+    fun setRemoteGoals(remoteGoals: List<SavingsGoal>) {
+        _goals.value = remoteGoals
+    }
+
+    private fun syncPrimaryGoalToDashboard() {
+        val primary = _goals.value.firstOrNull()
+        if (primary != null) {
+            FinanceRepository.updateLocalGoal(primary.toGoalItem())
+        } else {
+            FinanceRepository.updateLocalGoal(GoalItem())
+        }
+    }
 
     override fun observeGoals(): Flow<List<SavingsGoal>> {
         return _goals.asStateFlow()
@@ -64,6 +83,7 @@ class GoalRepositoryImpl(
         }
 
         syncGoalToFirestore(goal)
+        syncPrimaryGoalToDashboard()
         return Result.success(Unit)
     }
 
@@ -87,6 +107,7 @@ class GoalRepositoryImpl(
 
         if (found) {
             syncGoalToFirestore(goal)
+            syncPrimaryGoalToDashboard()
             return Result.success(Unit)
         }
         return Result.failure(NoSuchElementException("Goal not found: ${goal.id}"))
@@ -95,6 +116,7 @@ class GoalRepositoryImpl(
     override suspend fun deleteGoal(goalId: String): Result<Unit> {
         _goals.update { list -> list.filterNot { it.id == goalId } }
         deleteGoalFromFirestore(goalId)
+        syncPrimaryGoalToDashboard()
         return Result.success(Unit)
     }
 
@@ -103,38 +125,43 @@ class GoalRepositoryImpl(
             return Result.failure(IllegalArgumentException("Contribution amount must be strictly positive"))
         }
 
-        var targetFound = false
+        var updatedGoal: SavingsGoal? = null
         _goals.update { list ->
             list.map { goal ->
                 if (goal.id == contribution.goalId) {
-                    targetFound = true
                     val updatedContributions = listOf(contribution) + goal.contributions
-                    goal.copy(contributions = updatedContributions)
+                    goal.copy(contributions = updatedContributions).also { updatedGoal = it }
                 } else {
                     goal
                 }
             }
         }
 
-        if (targetFound) {
+        val goalToSync = updatedGoal
+        if (goalToSync != null) {
+            syncGoalToFirestore(goalToSync)
             syncContributionToFirestore(contribution)
+            syncPrimaryGoalToDashboard()
             return Result.success(Unit)
         }
         return Result.failure(NoSuchElementException("Goal not found for contribution: ${contribution.goalId}"))
     }
 
     override suspend fun deleteContribution(goalId: String, contributionId: String): Result<Unit> {
+        var updatedGoal: SavingsGoal? = null
         _goals.update { list ->
             list.map { goal ->
                 if (goal.id == goalId) {
                     val updatedContributions = goal.contributions.filterNot { it.id == contributionId }
-                    goal.copy(contributions = updatedContributions)
+                    goal.copy(contributions = updatedContributions).also { updatedGoal = it }
                 } else {
                     goal
                 }
             }
         }
+        updatedGoal?.let { syncGoalToFirestore(it) }
         deleteContributionFromFirestore(goalId, contributionId)
+        syncPrimaryGoalToDashboard()
         return Result.success(Unit)
     }
 

@@ -70,7 +70,9 @@ fun DashboardScreen(
     var showEditGoalDialog by remember { mutableStateOf(false) }
 
     val firstName = remember(currentUser) {
-        currentUser?.displayName?.trim()?.substringBefore(" ")?.takeIf { it.isNotBlank() } ?: "Kavindu"
+        currentUser?.displayName?.trim()?.substringBefore(" ")?.takeIf { it.isNotBlank() }
+            ?: currentUser?.email?.substringBefore("@")?.takeIf { it.isNotBlank() }
+            ?: "User"
     }
     val currentMonthName = remember {
         SimpleDateFormat("MMMM", Locale.US).format(Date())
@@ -229,7 +231,7 @@ fun DashboardScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "✓ Guaranteed after pre-funding rent, gym & MacBook target.",
+                        text = "✓ Calculated after pre-funding fixed bills & savings targets.",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.White.copy(alpha = 0.75f)
                     )

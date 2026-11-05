@@ -282,7 +282,11 @@ fun IncomeCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 8.dp)
+                ) {
                     if (item.currency == "USD") {
                         Text(
                             text = "$${currencyFormatter.format(item.rawAmount)} USD (@ ${item.exchangeRate} LKR)",
@@ -305,9 +309,12 @@ fun IncomeCard(
                             shape = RoundedCornerShape(10.dp),
                             border = BorderStroke(1.dp, IncomeGreen),
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = IncomeGreen),
-                            modifier = Modifier.padding(end = 4.dp)
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                            modifier = Modifier
+                                .height(36.dp)
+                                .padding(end = 4.dp)
                         ) {
-                            Text("Settle & Sweep 50%", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                            Text("Settle & Sweep 50%", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, maxLines = 1)
                         }
                     }
 

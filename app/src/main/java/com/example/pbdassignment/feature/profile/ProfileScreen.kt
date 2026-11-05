@@ -139,18 +139,20 @@ fun ProfileScreen(
 
                     Column {
                         Text(
-                            text = currentUser?.displayName?.takeIf { it.isNotBlank() } ?: "Kavindu Silva",
+                            text = currentUser?.displayName?.takeIf { it.isNotBlank() }
+                                ?: currentUser?.email?.substringBefore("@")?.takeIf { it.isNotBlank() }
+                                ?: "Personal Finance User",
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Junior Software Engineer • Colombo",
+                            text = "Personal Finance Account",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = currentUser?.email?.takeIf { it.isNotBlank() } ?: "kavindu.silva@startup.lk",
+                            text = currentUser?.email?.takeIf { it.isNotBlank() } ?: "Guest Session",
                             style = MaterialTheme.typography.labelSmall,
                             color = BrandPrimary,
                             fontWeight = FontWeight.Medium
@@ -286,6 +288,7 @@ fun ProfileScreen(
                                     newRuleText = ""
                                 }
                             },
+                            modifier = Modifier.height(56.dp),
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = BrandPrimary)
                         ) {

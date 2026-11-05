@@ -222,7 +222,11 @@ fun ExpenseScreen() {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 12.dp)
+                ) {
                     Text(
                         text = "Expenses",
                         style = MaterialTheme.typography.titleLarge,
@@ -231,39 +235,44 @@ fun ExpenseScreen() {
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Track fixed obligations, lifestyle spend & categories",
+                        text = "Fixed bills, lifestyle spend & categories",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1
                     )
                 }
 
-                Button(
-                    onClick = {
-                        if (selectedTabIndex == 1) {
-                            editingRecurringExpense = null
-                            activeModalView = "add_recurring"
-                        } else {
-                            expenseToEdit = null
-                            activeModalView = "add_expense"
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = BrandPrimary),
-                    shape = RoundedCornerShape(12.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 14.dp, vertical = 8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = if (selectedTabIndex == 1) "Add Recurring" else "Add Expense",
-                        color = Color.White,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                if (selectedTabIndex != 2) {
+                    Button(
+                        onClick = {
+                            if (selectedTabIndex == 1) {
+                                editingRecurringExpense = null
+                                activeModalView = "add_recurring"
+                            } else {
+                                expenseToEdit = null
+                                activeModalView = "add_expense"
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = BrandPrimary),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.height(40.dp),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 14.dp, vertical = 0.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (selectedTabIndex == 1) "Add Recurring" else "Add Expense",
+                            color = Color.White,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1
+                        )
+                    }
                 }
             }
 

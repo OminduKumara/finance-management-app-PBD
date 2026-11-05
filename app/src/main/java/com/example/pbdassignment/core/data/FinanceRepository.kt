@@ -16,117 +16,42 @@ import kotlinx.coroutines.flow.update
 
 /**
  * Centralized Repository managing state for all features.
- * Pre-seeded with Kavindu Silva's authentic scenario data for demonstration.
+ * Starts clean with empty lists and syncs with Room and Firebase Firestore.
  */
 object FinanceRepository {
 
-    private val _incomes = MutableStateFlow<List<IncomeItem>>(
-        listOf(
-            IncomeItem(
-                streamType = IncomeStreams.SALARY,
-                title = "Startup Engineering Salary",
-                clientOrSource = "Tech Startup, Colombo (25th)",
-                rawAmount = 135000.0,
-                currency = "LKR",
-                exchangeRate = 1.0,
-                invoiceStatus = InvoiceStatus.RECEIVED
-            ),
-            IncomeItem(
-                streamType = IncomeStreams.FREELANCE,
-                title = "React & Tailwind Build",
-                clientOrSource = "Local Retail SME",
-                rawAmount = 45000.0,
-                currency = "LKR",
-                exchangeRate = 1.0,
-                invoiceStatus = InvoiceStatus.OVERDUE,
-                dueDate = System.currentTimeMillis() - (18L * 24 * 3600 * 1000)
-            ),
-            IncomeItem(
-                streamType = IncomeStreams.ADSENSE,
-                title = "Tech Blog AdSense Revenue",
-                clientOrSource = "Google LLC (USD Wire)",
-                rawAmount = 45.0,
-                currency = "USD",
-                exchangeRate = 302.50,
-                invoiceStatus = InvoiceStatus.RECEIVED
-            ),
-            IncomeItem(
-                streamType = IncomeStreams.CRYPTO,
-                title = "Binance ETH/USDT Swing Trade",
-                clientOrSource = "Binance Spot Ledger",
-                rawAmount = 12500.0,
-                currency = "LKR",
-                exchangeRate = 1.0,
-                invoiceStatus = InvoiceStatus.RECEIVED
-            )
-        )
-    )
+    private val _incomes = MutableStateFlow<List<IncomeItem>>(emptyList())
     val incomes: StateFlow<List<IncomeItem>> = _incomes.asStateFlow()
 
-    private val _expenses = MutableStateFlow<List<ExpenseItem>>(
-        listOf(
-            ExpenseItem(
-                amount = 34000.0,
-                category = DefaultExpenseCategories.HOUSING,
-                nature = ExpenseNature.COMMITTED,
-                paymentSource = PaymentSource.PRIMARY_CARD,
-                merchantPreset = "Rent",
-                notes = "Monthly Apartment Rent"
-            ),
-            ExpenseItem(
-                amount = 4500.0,
-                category = DefaultExpenseCategories.HEALTH_GYM,
-                nature = ExpenseNature.COMMITTED,
-                paymentSource = PaymentSource.SECONDARY_ACCOUNT,
-                merchantPreset = "Gym",
-                notes = "Auto-debited from secondary account"
-            ),
-            ExpenseItem(
-                amount = 1850.0,
-                category = DefaultExpenseCategories.TRANSPORT,
-                nature = ExpenseNature.DISCRETIONARY,
-                paymentSource = PaymentSource.PRIMARY_CARD,
-                merchantPreset = "PickMe",
-                notes = "PickMe ride back from office"
-            ),
-            ExpenseItem(
-                amount = 3200.0,
-                category = DefaultExpenseCategories.FOOD,
-                nature = ExpenseNature.DISCRETIONARY,
-                paymentSource = PaymentSource.PRIMARY_CARD,
-                merchantPreset = "UberEats",
-                notes = "UberEats dinner order"
-            ),
-            ExpenseItem(
-                amount = 2400.0,
-                category = DefaultExpenseCategories.FOOD,
-                nature = ExpenseNature.DISCRETIONARY,
-                paymentSource = PaymentSource.CASH,
-                merchantPreset = "Coffee & Dining",
-                notes = "Artisan cafe with startup team"
-            )
-        )
-    )
+    private val _expenses = MutableStateFlow<List<ExpenseItem>>(emptyList())
     val expenses: StateFlow<List<ExpenseItem>> = _expenses.asStateFlow()
 
-    private val _goal = MutableStateFlow(
-        GoalItem(
-            title = "MacBook Pro M4 (14-inch)",
-            targetAmount = 490000.0,
-            currentSaved = 11200.0,
-            targetMonths = 12
-        )
-    )
+    private val _goal = MutableStateFlow(GoalItem())
     val goal: StateFlow<GoalItem> = _goal.asStateFlow()
 
     private val _baseline = MutableStateFlow(FinancialBaseline())
     val baseline: StateFlow<FinancialBaseline> = _baseline.asStateFlow()
 
+    fun clearLocalData() {
+        _incomes.value = emptyList()
+        _expenses.value = emptyList()
+        _goal.value = GoalItem()
+        _baseline.value = FinancialBaseline()
+    }
+
+    fun upsertLocalIncome(income: IncomeItem) {
+        _incomes.update { current ->
+            if (current.any { it.id == income.id }) {
+                current.map { if (it.id == income.id) income else it }
+            } else {
+                listOf(income) + current
+            }
+        }
+    }
+
     // --- Income Methods ---
     fun addIncome(income: IncomeItem) {
-        _incomes.update { current ->
-            if (current.any { it.id == income.id }) current else listOf(income) + current
-        }
+        upsertLocalIncome(income)
         com.example.pbdassignment.core.firebase.FirebaseManager.syncIncome(income)
     }
 
@@ -190,12 +115,16 @@ object FinanceRepository {
         _goal.update {
             it.copy(
                 title = title.ifBlank { it.title },
-                targetAmount = if (targetAmount > 0) targetAmount else it.targetAmount,
+                targetAmount = if (targetAmount >= 0) targetAmount else it.targetAmount,
                 currentSaved = if (currentSaved >= 0) currentSaved else it.currentSaved,
                 targetMonths = if (months > 0) months else it.targetMonths
             )
         }
         com.example.pbdassignment.core.firebase.FirebaseManager.syncGoal(_goal.value)
+    }
+
+    fun updateLocalGoal(goalItem: GoalItem) {
+        _goal.value = goalItem
     }
 
     // --- Financial Baseline & Custom Rules Methods ---
