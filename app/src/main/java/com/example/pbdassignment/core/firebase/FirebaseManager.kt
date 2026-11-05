@@ -5,15 +5,24 @@ import com.example.pbdassignment.core.data.FinanceRepository
 import com.example.pbdassignment.core.model.DefaultExpenseCategories
 import com.example.pbdassignment.core.model.ExpenseItem
 import com.example.pbdassignment.core.model.ExpenseNature
+import com.example.pbdassignment.core.model.FinancialBaseline
 import com.example.pbdassignment.core.model.GoalItem
 import com.example.pbdassignment.core.model.IncomeItem
 import com.example.pbdassignment.core.model.IncomeStreams
 import com.example.pbdassignment.core.model.InvoiceStatus
 import com.example.pbdassignment.core.model.PaymentSource
+import com.example.pbdassignment.feature.category.domain.Category
+import com.example.pbdassignment.feature.expense.domain.Expense
+import com.example.pbdassignment.feature.recurring.domain.RecurringExpense
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.example.pbdassignment.feature.income.data.IncomeRepositoryProvider
+import com.example.pbdassignment.feature.income.data.LocalIncomeRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,9 +36,14 @@ object FirebaseManager {
     private val _currentUser = MutableStateFlow<FirebaseUser?>(null)
     val currentUser: StateFlow<FirebaseUser?> = _currentUser.asStateFlow()
 
+    private val _customDisplayName = MutableStateFlow<String?>(null)
+    val customDisplayName: StateFlow<String?> = _customDisplayName.asStateFlow()
+
+    private var userListener: ListenerRegistration? = null
     private var incomeListener: ListenerRegistration? = null
     private var expenseListener: ListenerRegistration? = null
     private var goalListener: ListenerRegistration? = null
+    private var baselineListener: ListenerRegistration? = null
 
     init {
         auth.addAuthStateListener { firebaseAuth ->
@@ -99,16 +113,61 @@ object FirebaseManager {
             }
     }
 
+    fun updateDisplayName(newName: String, onResult: (Boolean, String?) -> Unit) {
+        val trimmed = newName.trim()
+        if (trimmed.isBlank()) {
+            onResult(false, "User name cannot be empty")
+            return
+        }
+        _customDisplayName.value = trimmed
+        val user = auth.currentUser
+        if (user == null) {
+            onResult(true, null)
+            return
+        }
+
+        val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
+            .setDisplayName(trimmed)
+            .build()
+
+        user.updateProfile(profileUpdates)
+            .addOnCompleteListener {
+                firestore.collection("users").document(user.uid)
+                    .set(mapOf("displayName" to trimmed, "name" to trimmed), com.google.firebase.firestore.SetOptions.merge())
+                    .addOnFailureListener { e -> Log.w(TAG, "Save name to Firestore failed: ${e.message}") }
+                _currentUser.value = auth.currentUser
+                onResult(true, null)
+            }
+    }
+
     fun signOut() {
         auth.signOut()
         _currentUser.value = null
+        _customDisplayName.value = null
         detachListeners()
+        FinanceRepository.clearLocalData()
+        (com.example.pbdassignment.feature.goals.GoalRepositoryProvider.instance as? com.example.pbdassignment.data.repository.GoalRepositoryImpl)?.clearLocalGoals()
+        IncomeRepositoryProvider.instance?.let { repo: LocalIncomeRepository ->
+            CoroutineScope(Dispatchers.IO).launch {
+                repo.clearIncomes()
+            }
+        }
     }
 
     // --- Firestore Realtime Synchronization ---
 
     fun attachRealtimeListeners(userId: String) {
         detachListeners()
+
+        userListener = firestore.collection("users").document(userId)
+            .addSnapshotListener { snapshot, _ ->
+                if (snapshot != null && snapshot.exists()) {
+                    val name = snapshot.getString("displayName") ?: snapshot.getString("name")
+                    if (!name.isNullOrBlank()) {
+                        _customDisplayName.value = name
+                    }
+                }
+            }
 
         // Listen to Incomes
         incomeListener = firestore.collection("users").document(userId)
@@ -137,7 +196,12 @@ object FirebaseManager {
                         }
                     }
                     if (remoteIncomes.isNotEmpty()) {
-                        remoteIncomes.forEach { FinanceRepository.addIncome(it) }
+                        remoteIncomes.forEach { FinanceRepository.upsertLocalIncome(it) }
+                        IncomeRepositoryProvider.instance?.let { repo: LocalIncomeRepository ->
+                            CoroutineScope(Dispatchers.IO).launch {
+                                remoteIncomes.forEach { repo.addIncome(it) }
+                            }
+                        }
                     }
                 }
             }
@@ -167,20 +231,54 @@ object FirebaseManager {
                         }
                     }
                     if (remoteExpenses.isNotEmpty()) {
-                        remoteExpenses.forEach { FinanceRepository.addExpense(it) }
+                        remoteExpenses.forEach { FinanceRepository.upsertLocalExpense(it) }
                     }
                 }
             }
 
         // Listen to Goal
         goalListener = firestore.collection("users").document(userId)
-            .collection("goals").document("macbook_pro_m4")
+            .collection("goals")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null || snapshot == null || snapshot.isEmpty) return@addSnapshotListener
+                val doc = snapshot.documents.firstOrNull() ?: return@addSnapshotListener
+                val id = doc.getString("id") ?: doc.id
+                val title = doc.getString("title") ?: doc.getString("name") ?: "Savings Goal"
+                val saved = doc.getDouble("currentSaved") ?: doc.getDouble("totalSavedLkr") ?: 0.0
+                val target = doc.getDouble("targetAmount") ?: doc.getDouble("targetAmountLkr") ?: 0.0
+                val months = (doc.getLong("targetMonths") ?: 12L).toInt()
+                FinanceRepository.updateLocalGoal(
+                    GoalItem(
+                        id = id,
+                        title = title,
+                        targetAmount = target,
+                        currentSaved = saved,
+                        targetMonths = months
+                    )
+                )
+            }
+
+        // Listen to Financial Baseline
+        baselineListener = firestore.collection("users").document(userId)
+            .collection("settings").document("baseline")
             .addSnapshotListener { doc, error ->
                 if (error != null || doc == null || !doc.exists()) return@addSnapshotListener
-                val saved = doc.getDouble("currentSaved") ?: 11200.0
-                val target = doc.getDouble("targetAmount") ?: 490000.0
-                FinanceRepository.updateGoalTarget(target)
-                FinanceRepository.allocateToGoal(saved - FinanceRepository.goal.value.currentSaved)
+                try {
+                    val defaultBaseline = FinancialBaseline()
+                    @Suppress("UNCHECKED_CAST")
+                    val rules = (doc.get("rules") as? List<*>)?.mapNotNull { it as? String } ?: defaultBaseline.rules
+                    val remoteBaseline = FinancialBaseline(
+                        baseSalary = doc.getDouble("baseSalary") ?: defaultBaseline.baseSalary,
+                        committedRent = doc.getDouble("committedRent") ?: defaultBaseline.committedRent,
+                        committedGym = doc.getDouble("committedGym") ?: defaultBaseline.committedGym,
+                        discretionaryBudgetCap = doc.getDouble("discretionaryBudgetCap") ?: defaultBaseline.discretionaryBudgetCap,
+                        targetSavingsRate = doc.getDouble("targetSavingsRate") ?: defaultBaseline.targetSavingsRate,
+                        rules = rules
+                    )
+                    FinanceRepository.updateLocalBaseline(remoteBaseline)
+                } catch (e: Exception) {
+                    Log.w(TAG, "Parse baseline failed: ${e.message}")
+                }
             }
     }
 
@@ -225,6 +323,92 @@ object FirebaseManager {
             .addOnFailureListener { Log.w(TAG, "Sync expense failed: ${it.message}") }
     }
 
+    fun syncExpense(expense: Expense) {
+        val uid = auth.currentUser?.uid ?: return
+        val docData = hashMapOf(
+            "id" to expense.id,
+            "userId" to uid,
+            "title" to expense.title,
+            "amount" to expense.amount,
+            "currencyCode" to expense.currencyCode,
+            "categoryId" to expense.categoryId,
+            "categoryName" to expense.categoryName,
+            "dateMillis" to expense.dateMillis,
+            "isCommitted" to expense.isCommitted,
+            "paymentMethod" to expense.paymentMethod,
+            "notes" to expense.notes,
+            "category" to expense.categoryName,
+            "nature" to if (expense.isCommitted) "COMMITTED" else "DISCRETIONARY",
+            "paymentSource" to when (expense.paymentMethod.lowercase()) {
+                "credit card", "credit_card", "card" -> "PRIMARY_CARD"
+                "bank transfer", "debit card" -> "SECONDARY_ACCOUNT"
+                else -> "CASH"
+            },
+            "merchantPreset" to expense.title,
+            "timestamp" to expense.dateMillis
+        )
+        firestore.collection("users").document(uid)
+            .collection("expenses").document(expense.id)
+            .set(docData)
+            .addOnFailureListener { Log.w(TAG, "Sync expense failed: ${it.message}") }
+    }
+
+    fun syncCategory(category: Category) {
+        val uid = auth.currentUser?.uid ?: return
+        val docData = hashMapOf(
+            "id" to category.id,
+            "userId" to uid,
+            "name" to category.name,
+            "icon" to category.icon,
+            "color" to category.color,
+            "isDefault" to category.isDefault
+        )
+        firestore.collection("users").document(uid)
+            .collection("categories").document(category.id)
+            .set(docData)
+            .addOnFailureListener { Log.w(TAG, "Sync category failed: ${it.message}") }
+    }
+
+    fun deleteCategory(id: String) {
+        val uid = auth.currentUser?.uid ?: return
+        firestore.collection("users").document(uid)
+            .collection("categories").document(id)
+            .delete()
+            .addOnFailureListener { Log.w(TAG, "Delete category failed: ${it.message}") }
+    }
+
+    fun syncRecurringExpense(recurring: RecurringExpense) {
+        val uid = auth.currentUser?.uid ?: return
+        val docData = hashMapOf(
+            "id" to recurring.id,
+            "userId" to uid,
+            "title" to recurring.title,
+            "amount" to recurring.amount,
+            "currencyCode" to recurring.currencyCode,
+            "categoryId" to recurring.categoryId,
+            "categoryName" to recurring.categoryName,
+            "paymentMethod" to recurring.paymentMethod,
+            "frequency" to recurring.frequency,
+            "startDateMillis" to recurring.startDateMillis,
+            "endDateMillis" to (recurring.endDateMillis ?: 0L),
+            "isActive" to recurring.isActive,
+            "notes" to recurring.notes,
+            "lastGeneratedDateMillis" to (recurring.lastGeneratedDateMillis ?: 0L)
+        )
+        firestore.collection("users").document(uid)
+            .collection("recurring_expenses").document(recurring.id)
+            .set(docData)
+            .addOnFailureListener { Log.w(TAG, "Sync recurring expense failed: ${it.message}") }
+    }
+
+    fun deleteRecurringExpense(id: String) {
+        val uid = auth.currentUser?.uid ?: return
+        firestore.collection("users").document(uid)
+            .collection("recurring_expenses").document(id)
+            .delete()
+            .addOnFailureListener { Log.w(TAG, "Delete recurring expense failed: ${it.message}") }
+    }
+
     fun deleteIncome(id: String) {
         val uid = auth.currentUser?.uid ?: return
         firestore.collection("users").document(uid)
@@ -257,12 +441,33 @@ object FirebaseManager {
             .addOnFailureListener { Log.w(TAG, "Sync goal failed: ${it.message}") }
     }
 
+    fun syncBaseline(baseline: FinancialBaseline) {
+        val uid = auth.currentUser?.uid ?: return
+        val docData = hashMapOf(
+            "userId" to uid,
+            "baseSalary" to baseline.baseSalary,
+            "committedRent" to baseline.committedRent,
+            "committedGym" to baseline.committedGym,
+            "discretionaryBudgetCap" to baseline.discretionaryBudgetCap,
+            "targetSavingsRate" to baseline.targetSavingsRate,
+            "rules" to baseline.rules
+        )
+        firestore.collection("users").document(uid)
+            .collection("settings").document("baseline")
+            .set(docData)
+            .addOnFailureListener { Log.w(TAG, "Sync baseline failed: ${it.message}") }
+    }
+
     private fun detachListeners() {
+        userListener?.remove()
+        userListener = null
         incomeListener?.remove()
         incomeListener = null
         expenseListener?.remove()
         expenseListener = null
         goalListener?.remove()
         goalListener = null
+        baselineListener?.remove()
+        baselineListener = null
     }
 }

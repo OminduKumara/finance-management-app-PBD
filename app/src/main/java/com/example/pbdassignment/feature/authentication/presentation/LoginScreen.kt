@@ -1,4 +1,4 @@
-﻿package com.example.pbdassignment.feature.authentication.presentation
+package com.example.pbdassignment.feature.authentication.presentation
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -124,6 +124,20 @@ fun LoginScreen(
             // Switch to Register
             TextButton(onClick = onNavigateToRegister) {
                 Text("Don't have an account? Sign up")
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedButton(
+                onClick = {
+                    com.example.pbdassignment.core.firebase.FirebaseManager.signInAsDemoKavindu { _, _ ->
+                        onLoginSuccess()
+                    }
+                },
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+            ) {
+                Text("Continue as Guest")
             }
         }
     }

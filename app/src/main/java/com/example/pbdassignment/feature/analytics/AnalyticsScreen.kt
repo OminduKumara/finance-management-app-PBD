@@ -1,5 +1,6 @@
-﻿package com.example.pbdassignment.feature.analytics
+package com.example.pbdassignment.feature.analytics
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,12 +14,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -27,19 +37,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pbdassignment.feature.analytics.components.CommittedVsDiscretionaryCard
 import com.example.pbdassignment.feature.analytics.components.ExpenseCategoryChart
 import com.example.pbdassignment.feature.analytics.components.IncomeSourceChart
-import com.example.pbdassignment.ui.theme.EmeraldPrimary
+import com.example.pbdassignment.ui.theme.BrandPrimary
 import com.example.pbdassignment.ui.theme.ExpenseRed
 import com.example.pbdassignment.ui.theme.IncomeGreen
 import java.text.NumberFormat
 import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AnalyticsScreen(
-    viewModel: AnalyticsViewModel = viewModel()
+    viewModel: AnalyticsViewModel = viewModel(),
+    onNavigateBack: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -50,47 +63,71 @@ fun AnalyticsScreen(
         }
     }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        item {
-            Spacer(modifier = Modifier.height(8.dp))
-            Column {
-                Text(
-                    text = "Financial Analytics",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.ExtraBold
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            TopAppBar(
+                title = {
+                    Column {
+                        Text(
+                            text = "Financial Analytics",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Cashflow distributions, splits & ratios",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
                 )
-                Text(
-                    text = "Spending distributions and multi-source cash flow patterns",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            )
         }
-
-        // Time Period Filter Chips
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                uiState.availablePeriods.forEach { period ->
-                    FilterChip(
-                        selected = uiState.selectedPeriod.label == period.label,
-                        onClick = { viewModel.selectPeriod(period) },
-                        label = { Text(period.label) }
-                    )
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Time Period Filter Chips
+            item {
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    uiState.availablePeriods.forEach { period ->
+                        FilterChip(
+                            selected = uiState.selectedPeriod.label == period.label,
+                            onClick = { viewModel.selectPeriod(period) },
+                            label = { Text(period.label) },
+                            shape = RoundedCornerShape(10.dp),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = BrandPrimary.copy(alpha = 0.12f),
+                                selectedLabelColor = BrandPrimary
+                            )
+                        )
+                    }
                 }
             }
-        }
 
-        if (uiState.isLoading) {
+            if (uiState.isLoading) {
             item {
                 Box(
                     modifier = Modifier
@@ -98,7 +135,7 @@ fun AnalyticsScreen(
                         .padding(vertical = 48.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(color = BrandPrimary)
                 }
             }
         } else {
@@ -108,51 +145,62 @@ fun AnalyticsScreen(
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(18.dp),
+                    shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
-                    Column(modifier = Modifier.padding(18.dp)) {
+                    Column(modifier = Modifier.padding(20.dp)) {
                         Text(
-                            text = "Summary: ${uiState.selectedPeriod.label}",
+                            text = "SUMMARY: ${uiState.selectedPeriod.label.uppercase()}",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 0.5.sp
                         )
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(14.dp))
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Column {
-                                Text("Total Inflow", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Inflow", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = "+LKR ${currencyFormatter.format(snapshot.totalIncomeLkr)}",
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = IncomeGreen
+                                    color = IncomeGreen,
+                                    maxLines = 1
                                 )
                             }
 
-                            Column {
-                                Text("Total Outflow", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Outflow", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = "-LKR ${currencyFormatter.format(snapshot.totalExpenseLkr)}",
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = ExpenseRed
+                                    color = ExpenseRed,
+                                    maxLines = 1
                                 )
                             }
 
-                            Column(horizontalAlignment = Alignment.End) {
-                                Text("Savings Rate", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                horizontalAlignment = Alignment.End
+                            ) {
+                                Text("Savings Rate", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 val ratePercent = (snapshot.savingsRate * 100).toInt()
+                                Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = "$ratePercent%",
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (snapshot.savingsRate >= 0) EmeraldPrimary else ExpenseRed
+                                    color = if (snapshot.savingsRate >= 0) BrandPrimary else ExpenseRed,
+                                    maxLines = 1
                                 )
                             }
                         }
@@ -194,4 +242,5 @@ fun AnalyticsScreen(
             Spacer(modifier = Modifier.height(80.dp))
         }
     }
+}
 }

@@ -1,5 +1,6 @@
-﻿package com.example.pbdassignment.feature.dashboard
+package com.example.pbdassignment.feature.dashboard
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,11 +12,23 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.AccountBalanceWallet
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.QueryStats
+import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -26,26 +39,46 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pbdassignment.core.firebase.FirebaseManager
 import com.example.pbdassignment.feature.dashboard.components.EditGoalDialog
 import com.example.pbdassignment.feature.dashboard.components.GoalProgressCard
 import com.example.pbdassignment.feature.dashboard.components.SpendingRatioCard
-import com.example.pbdassignment.ui.theme.EmeraldPrimary
+import com.example.pbdassignment.ui.theme.BrandPrimary
 import com.example.pbdassignment.ui.theme.ExpenseRed
 import com.example.pbdassignment.ui.theme.IncomeGreen
 import java.text.NumberFormat
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = viewModel(),
-    onNavigateToAnalytics: () -> Unit = {}
+    onNavigateToAnalytics: () -> Unit = {},
+    onNavigateToIncome: () -> Unit = {},
+    onNavigateToExpenses: () -> Unit = {},
+    onNavigateToGoals: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val currentUser by FirebaseManager.currentUser.collectAsState()
+    val customDisplayName by FirebaseManager.customDisplayName.collectAsState()
     var showEditGoalDialog by remember { mutableStateOf(false) }
+
+    val firstName = remember(currentUser, customDisplayName) {
+        customDisplayName?.trim()?.substringBefore(" ")?.takeIf { it.isNotBlank() }
+            ?: currentUser?.displayName?.trim()?.substringBefore(" ")?.takeIf { it.isNotBlank() }
+            ?: currentUser?.email?.substringBefore("@")?.takeIf { it.isNotBlank() }
+            ?: "User"
+    }
+    val currentMonthName = remember {
+        SimpleDateFormat("MMMM", Locale.US).format(Date())
+    }
 
     val currencyFormatter = remember {
         NumberFormat.getNumberInstance(Locale.US).apply {
@@ -57,11 +90,13 @@ fun DashboardScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // 1. Personalized Header
         item {
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -69,116 +104,248 @@ fun DashboardScreen(
             ) {
                 Column {
                     Text(
-                        text = "Financial Clarity",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.ExtraBold
+                        text = "Hello, $firstName 👋",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Real-time Cashflow & Target Runway",
-                        style = MaterialTheme.typography.bodyMedium,
+                        text = "Cycle: $currentMonthName • ${uiState.daysRemainingInMonth} days left",
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(MaterialTheme.colorScheme.primaryContainer)
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                val isHealthy = uiState.netCashflowLkr >= 0 && uiState.safeToSpendDailyLkr > 0
+                val statusColor = if (isHealthy) IncomeGreen else ExpenseRed
+                val statusText = if (isHealthy) "HEALTHY" else "WATCH SPEND"
+
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = statusColor.copy(alpha = 0.12f)
                 ) {
-                    Text(
-                        text = "LIVE",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(7.dp)
+                                .clip(CircleShape)
+                                .background(statusColor)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = statusText,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = statusColor,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
 
-        // Hero Card: Daily Safe-To-Spend Burn Allowance
+        // 2. Hero Card: Daily Safe-To-Spend Allowance (Ultra Clean Fintech Card)
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(22.dp),
+                colors = CardDefaults.cardColors(containerColor = BrandPrimary),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            ) {
+                Column(modifier = Modifier.padding(22.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "DAILY SAFE-TO-SPEND",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White.copy(alpha = 0.8f),
+                            letterSpacing = 1.sp
+                        )
+
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = Color.White.copy(alpha = 0.18f)
+                        ) {
+                            Text(
+                                text = "Formula Protected",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(
+                            text = "LKR ${currencyFormatter.format(uiState.safeToSpendDailyLkr)}",
+                            style = MaterialTheme.typography.headlineLarge.copy(fontSize = 32.sp),
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color.White
+                        )
+                        Text(
+                            text = " / day",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.White.copy(alpha = 0.75f),
+                            modifier = Modifier.padding(bottom = 4.dp, start = 4.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Detail Pill Breakdown
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color.White.copy(alpha = 0.12f),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 9.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Lifestyle Pool: LKR ${currencyFormatter.format(uiState.lifestylePoolLkr)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.White,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = "÷ ${uiState.daysRemainingInMonth} Days",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.White.copy(alpha = 0.9f),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // 3. Monthly Inflow vs Outflow Cashflow Card
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
-                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(modifier = Modifier.padding(20.dp)) {
                     Text(
-                        text = "DAILY SAFE-TO-SPEND",
+                        text = "MONTHLY CASHFLOW & SAVINGS RATE",
                         style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+                        letterSpacing = 0.5.sp
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "LKR ${currencyFormatter.format(uiState.safeToSpendDailyLkr)}",
-                        style = MaterialTheme.typography.headlineLarge.copy(fontSize = 34.sp),
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Inflows",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "+LKR ${currencyFormatter.format(uiState.realizedIncomeLkr)}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = IncomeGreen,
+                                maxLines = 1
+                            )
+                        }
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Outflows",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "-LKR ${currencyFormatter.format(uiState.totalExpenseLkr)}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = ExpenseRed,
+                                maxLines = 1
+                            )
+                        }
+
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            horizontalAlignment = Alignment.End
+                        ) {
+                            Text(
+                                text = "Net Surplus",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "LKR ${currencyFormatter.format(uiState.netCashflowLkr)}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = if (uiState.netCashflowLkr >= 0) BrandPrimary else ExpenseRed,
+                                maxLines = 1
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Savings Retention Bar
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Income Retained (Savings Rate)",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "${uiState.savingsRatePercent.toInt()}%",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = BrandPrimary
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = "Available to spend today after locking in committed rent, utilities, and MacBook fund.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
+
+                    LinearProgressIndicator(
+                        progress = { (uiState.savingsRatePercent / 100.0).toFloat().coerceIn(0f, 1f) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp)),
+                        color = BrandPrimary,
+                        trackColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 }
             }
         }
 
-        // Monthly Summary Inflow vs Outflow
-        item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(18.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        Text("Inflow", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "+LKR ${currencyFormatter.format(uiState.realizedIncomeLkr)}",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = IncomeGreen
-                        )
-                    }
-
-                    Column {
-                        Text("Outflows", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "-LKR ${currencyFormatter.format(uiState.totalExpenseLkr)}",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = ExpenseRed
-                        )
-                    }
-
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text("Net Surplus", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "LKR ${currencyFormatter.format(uiState.netCashflowLkr)}",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = if (uiState.netCashflowLkr >= 0) EmeraldPrimary else ExpenseRed
-                        )
-                    }
-                }
-            }
-        }
-
-        // Target Savings Goal Card
+        // 5. Target Savings Goal Card
         item {
             GoalProgressCard(
                 goal = uiState.goal,
@@ -189,7 +356,7 @@ fun DashboardScreen(
             )
         }
 
-        // 50/30/20 Ratio Meter
+        // 6. 50/30/20 Financial Balance Meter
         item {
             SpendingRatioCard(
                 committedRatio = uiState.committedRatio,
@@ -198,46 +365,50 @@ fun DashboardScreen(
             )
         }
 
-        // Deep Analytics CTA
+        // 7. Interactive Analytics Card
         item {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onNavigateToAnalytics() },
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f))
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(18.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "📊 Financial Analytics & Breakdown",
+                            text = "Analytics & Breakdown",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "Explore spending distributions and multi-source income",
+                            text = "Category donut chart, cash flow trends & ratios",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    Text(
-                        text = "Explore →",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = "View Analytics",
+                        tint = BrandPrimary,
+                        modifier = Modifier.padding(start = 8.dp)
                     )
                 }
             }
         }
 
         item {
-            Spacer(modifier = Modifier.height(80.dp))
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 

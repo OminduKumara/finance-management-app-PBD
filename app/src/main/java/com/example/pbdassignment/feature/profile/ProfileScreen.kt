@@ -1,5 +1,6 @@
-﻿package com.example.pbdassignment.feature.profile
+package com.example.pbdassignment.feature.profile
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -25,8 +25,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -35,6 +35,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -45,22 +46,35 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.pbdassignment.core.data.FinanceRepository
 import com.example.pbdassignment.core.firebase.FirebaseManager
 import com.example.pbdassignment.feature.profile.components.EditBaselineDialog
+import com.example.pbdassignment.ui.theme.BrandPrimary
+import com.example.pbdassignment.ui.theme.ExpenseRed
 import com.example.pbdassignment.ui.theme.IncomeGreen
 import java.text.NumberFormat
 import java.util.Locale
 
 @Composable
-fun ProfileScreen() {
+fun ProfileScreen(
+    onSignOut: () -> Unit = {}
+) {
     val currentUser by FirebaseManager.currentUser.collectAsState()
+    val customDisplayName by FirebaseManager.customDisplayName.collectAsState()
     val baseline by FinanceRepository.baseline.collectAsState()
 
+    val currentUserName = customDisplayName?.takeIf { it.isNotBlank() }
+        ?: currentUser?.displayName?.takeIf { it.isNotBlank() }
+        ?: currentUser?.email?.substringBefore('@')?.replaceFirstChar { it.uppercase() }
+        ?: "Personal Finance User"
+
+    var showEditNameDialog by remember { mutableStateOf(false) }
     var showEditBaselineDialog by remember { mutableStateOf(false) }
     var newRuleText by remember { mutableStateOf("") }
 
@@ -87,8 +101,15 @@ fun ProfileScreen() {
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = "Profile & Settings",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.ExtraBold
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = "Account credentials, baseline allocations & custom rules",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
@@ -96,49 +117,69 @@ fun ProfileScreen() {
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(18.dp),
+                        .padding(20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(54.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            Icons.Default.Person,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.size(30.dp)
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(54.dp)
+                                .clip(CircleShape)
+                                .background(BrandPrimary.copy(alpha = 0.12f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Default.Person,
+                                contentDescription = null,
+                                tint = BrandPrimary,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.size(14.dp))
+
+                        Column {
+                            Text(
+                                text = currentUserName,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Personal Account",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = currentUser?.email?.takeIf { it.isNotBlank() } ?: "Active Session",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = BrandPrimary,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
 
-                    Spacer(modifier = Modifier.size(14.dp))
-
-                    Column {
-                        Text(
-                            text = "Kavindu Silva",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "Junior Software Engineer • Colombo",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = currentUser?.email ?: "kavindu.silva@startup.lk",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Medium
+                    IconButton(
+                        onClick = { showEditNameDialog = true },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Edit,
+                            contentDescription = "Edit User Name",
+                            tint = BrandPrimary,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }
@@ -149,31 +190,38 @@ fun ProfileScreen() {
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
-                Column(modifier = Modifier.padding(18.dp)) {
+                Column(modifier = Modifier.padding(20.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Financial Baselines",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            text = "FINANCIAL BASELINES",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 0.5.sp
                         )
-                        IconButton(onClick = { showEditBaselineDialog = true }) {
+                        IconButton(
+                            onClick = { showEditBaselineDialog = true },
+                            modifier = Modifier.size(28.dp)
+                        ) {
                             Icon(
                                 Icons.Default.Edit,
                                 contentDescription = "Edit Baselines",
-                                tint = MaterialTheme.colorScheme.primary
+                                tint = BrandPrimary,
+                                modifier = Modifier.size(16.dp)
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     ProfileSettingRow(label = "Base Salary", value = "LKR ${currencyFormatter.format(baseline.baseSalary)}")
                     ProfileSettingRow(label = "Committed Rent", value = "LKR ${currencyFormatter.format(baseline.committedRent)}")
@@ -188,25 +236,27 @@ fun ProfileScreen() {
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(18.dp),
+                    modifier = Modifier.padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             Icons.AutoMirrored.Filled.Rule,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = BrandPrimary,
                             modifier = Modifier.padding(end = 8.dp)
                         )
                         Text(
                             text = "Custom Financial Rules",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
@@ -215,16 +265,17 @@ fun ProfileScreen() {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 text = "• $rule",
                                 style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             IconButton(
                                 onClick = { FinanceRepository.removeCustomRule(rule) },
@@ -251,6 +302,7 @@ fun ProfileScreen() {
                             onValueChange = { newRuleText = it },
                             placeholder = { Text("Add custom rule...", style = MaterialTheme.typography.bodySmall) },
                             singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.weight(1f)
                         )
                         Button(
@@ -260,7 +312,9 @@ fun ProfileScreen() {
                                     newRuleText = ""
                                 }
                             },
-                            shape = RoundedCornerShape(8.dp)
+                            modifier = Modifier.height(56.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = BrandPrimary)
                         ) {
                             Icon(Icons.Default.Add, contentDescription = "Add")
                         }
@@ -273,25 +327,27 @@ fun ProfileScreen() {
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(18.dp),
+                    modifier = Modifier.padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             Icons.Default.Lock,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = BrandPrimary,
                             modifier = Modifier.padding(end = 8.dp)
                         )
                         Text(
                             text = "Account Security",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
@@ -302,6 +358,7 @@ fun ProfileScreen() {
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                         singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -312,6 +369,7 @@ fun ProfileScreen() {
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                         singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -327,14 +385,17 @@ fun ProfileScreen() {
                             }
                             Text(
                                 text = statusMessage!!,
-                                color = if (isSuccess) IncomeGreen else MaterialTheme.colorScheme.error,
+                                color = if (isSuccess) IncomeGreen else ExpenseRed,
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
                     }
 
                     if (isUpdatingPassword) {
-                        CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                        CircularProgressIndicator(
+                            color = BrandPrimary,
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        )
                     } else {
                         Button(
                             onClick = {
@@ -364,10 +425,11 @@ fun ProfileScreen() {
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(46.dp),
-                            shape = RoundedCornerShape(10.dp)
+                                .height(48.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = BrandPrimary),
+                            shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("Update Password")
+                            Text("Update Password", fontWeight = FontWeight.Bold, color = Color.White)
                         }
                     }
                 }
@@ -377,18 +439,23 @@ fun ProfileScreen() {
         // Sign Out Button
         item {
             OutlinedButton(
-                onClick = { FirebaseManager.signOut() },
+                onClick = {
+                    FirebaseManager.signOut()
+                    onSignOut()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
-                shape = RoundedCornerShape(10.dp)
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
             ) {
                 Icon(
                     Icons.AutoMirrored.Filled.ExitToApp,
                     contentDescription = null,
+                    tint = ExpenseRed,
                     modifier = Modifier.padding(end = 8.dp)
                 )
-                Text("Sign Out", fontWeight = FontWeight.Bold)
+                Text("Sign Out", fontWeight = FontWeight.Bold, color = ExpenseRed)
             }
         }
 
@@ -407,6 +474,102 @@ fun ProfileScreen() {
             }
         )
     }
+
+    if (showEditNameDialog) {
+        var tempName by remember { mutableStateOf(currentUserName) }
+        var isSavingName by remember { mutableStateOf(false) }
+        var nameError by remember { mutableStateOf<String?>(null) }
+
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { if (!isSavingName) showEditNameDialog = false },
+            title = {
+                Text(
+                    text = "Edit Account Name",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        text = "Update the display name associated with your account.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    OutlinedTextField(
+                        value = tempName,
+                        onValueChange = {
+                            tempName = it
+                            nameError = null
+                        },
+                        placeholder = { Text("Enter your name") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = BrandPrimary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                        )
+                    )
+                    if (nameError != null) {
+                        Text(
+                            text = nameError!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val trimmed = tempName.trim()
+                        if (trimmed.isBlank()) {
+                            nameError = "Name cannot be empty"
+                            return@Button
+                        }
+                        isSavingName = true
+                        FirebaseManager.updateDisplayName(trimmed) { success, error ->
+                            isSavingName = false
+                            if (success) {
+                                showEditNameDialog = false
+                            } else {
+                                nameError = error ?: "Failed to update name"
+                            }
+                        }
+                    },
+                    enabled = !isSavingName && tempName.isNotBlank(),
+                    colors = ButtonDefaults.buttonColors(containerColor = BrandPrimary),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    if (isSavingName) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Save", fontWeight = FontWeight.Bold, color = Color.White)
+                    }
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { showEditNameDialog = false },
+                    enabled = !isSavingName,
+                    shape = RoundedCornerShape(10.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                ) {
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurface)
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(20.dp)
+        )
+    }
 }
 
 @Composable
@@ -414,10 +577,10 @@ fun ProfileSettingRow(label: String, value: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 5.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(text = label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(text = value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+        Text(text = value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
     }
 }

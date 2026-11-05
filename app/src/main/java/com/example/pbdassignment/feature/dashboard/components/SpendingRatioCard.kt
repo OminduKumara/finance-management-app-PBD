@@ -1,5 +1,6 @@
-﻿package com.example.pbdassignment.feature.dashboard.components
+package com.example.pbdassignment.feature.dashboard.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,6 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.pbdassignment.ui.theme.CommittedBlue
 import com.example.pbdassignment.ui.theme.DiscretionaryOrange
 import com.example.pbdassignment.ui.theme.GoalGold
@@ -36,17 +38,22 @@ fun SpendingRatioCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
             Text(
-                text = "50 / 30 / 20 Financial Balance Meter",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                text = "50 / 30 / 20 FINANCIAL BALANCE",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.5.sp
             )
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Committed (Fixed) vs Discretionary (Lifestyle) vs Goal Savings",
+                text = "Needs (50%) • Wants (30%) • Savings (20%)",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -57,13 +64,14 @@ fun SpendingRatioCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(18.dp)
-                    .clip(RoundedCornerShape(9.dp))
+                    .height(10.dp)
+                    .clip(RoundedCornerShape(5.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 if (committedRatio > 0f) {
                     Box(
                         modifier = Modifier
-                            .weight(committedRatio.coerceAtLeast(0.05f))
+                            .weight(committedRatio.coerceAtLeast(0.01f))
                             .fillMaxHeight()
                             .background(CommittedBlue)
                     )
@@ -71,7 +79,7 @@ fun SpendingRatioCard(
                 if (discretionaryRatio > 0f) {
                     Box(
                         modifier = Modifier
-                            .weight(discretionaryRatio.coerceAtLeast(0.05f))
+                            .weight(discretionaryRatio.coerceAtLeast(0.01f))
                             .fillMaxHeight()
                             .background(DiscretionaryOrange)
                     )
@@ -79,33 +87,33 @@ fun SpendingRatioCard(
                 if (savingsRatio > 0f) {
                     Box(
                         modifier = Modifier
-                            .weight(savingsRatio.coerceAtLeast(0.05f))
+                            .weight(savingsRatio.coerceAtLeast(0.01f))
                             .fillMaxHeight()
                             .background(GoalGold)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            // Legend Row
+            // 3-Column Legend
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                LegendItem(
+                LegendColumn(
                     color = CommittedBlue,
                     label = "Committed",
                     percentage = (committedRatio * 100).toInt()
                 )
-                LegendItem(
+                LegendColumn(
                     color = DiscretionaryOrange,
                     label = "Discretionary",
                     percentage = (discretionaryRatio * 100).toInt()
                 )
-                LegendItem(
+                LegendColumn(
                     color = GoalGold,
-                    label = "MacBook Save",
+                    label = "Goal Savings",
                     percentage = (savingsRatio * 100).toInt()
                 )
             }
@@ -114,19 +122,31 @@ fun SpendingRatioCard(
 }
 
 @Composable
-fun LegendItem(color: Color, label: String, percentage: Int) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .size(10.dp)
-                .clip(CircleShape)
-                .background(color)
-        )
-        Spacer(modifier = Modifier.size(6.dp))
+private fun LegendColumn(
+    color: Color,
+    label: String,
+    percentage: Int
+) {
+    Column {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(color)
+            )
+            Text(
+                text = " $label",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Spacer(modifier = Modifier.height(2.dp))
         Text(
-            text = "$label: $percentage%",
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Medium
+            text = "$percentage%",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }

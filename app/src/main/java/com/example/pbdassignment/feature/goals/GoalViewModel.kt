@@ -1,10 +1,9 @@
-﻿package com.example.pbdassignment.feature.goals
+package com.example.pbdassignment.feature.goals
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pbdassignment.core.model.GoalContribution
 import com.example.pbdassignment.core.model.SavingsGoal
-import com.example.pbdassignment.data.repository.FakeGoalRepository
 import com.example.pbdassignment.domain.goals.CalculateGoalProgress
 import com.example.pbdassignment.domain.repository.GoalRepository
 import kotlinx.coroutines.flow.MutableStateFlow

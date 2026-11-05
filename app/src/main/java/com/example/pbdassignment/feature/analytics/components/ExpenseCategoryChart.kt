@@ -1,5 +1,6 @@
-﻿package com.example.pbdassignment.feature.analytics.components
+package com.example.pbdassignment.feature.analytics.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -31,13 +32,13 @@ import com.example.pbdassignment.core.model.ExpenseByCategory
 import java.text.NumberFormat
 
 private val CategoryPalette = listOf(
-    Color(0xFF1976D2), // Blue
-    Color(0xFFF57C00), // Orange
-    Color(0xFF388E3C), // Green
-    Color(0xFF7B1FA2), // Purple
-    Color(0xFFD32F2F), // Red
-    Color(0xFF0097A7), // Cyan
-    Color(0xFF5D4037)  // Brown
+    Color(0xFF0F766E), // Teal
+    Color(0xFF3B82F6), // Blue
+    Color(0xFFF59E0B), // Amber
+    Color(0xFFEF4444), // Coral Red
+    Color(0xFF8B5CF6), // Purple
+    Color(0xFF10B981), // Mint
+    Color(0xFF64748B)  // Slate
 )
 
 @Composable
@@ -49,18 +50,22 @@ fun ExpenseCategoryChart(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(modifier = Modifier.padding(18.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
             Text(
-                text = "Expense Distribution by Category",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                text = "EXPENSE BY CATEGORY",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.5.sp
             )
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = "Where Kavindu's money went during this period",
+                text = "Distribution across spending categories",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -90,7 +95,7 @@ fun ExpenseCategoryChart(
                 ) {
                     Canvas(modifier = Modifier.size(150.dp)) {
                         var startAngle = -90f
-                        val strokeWidth = 32f
+                        val strokeWidth = 28f
 
                         categories.forEachIndexed { index, item ->
                             val sweepAngle = (item.percentageOfTotal.toFloat() / 100f) * 360f
@@ -113,10 +118,12 @@ fun ExpenseCategoryChart(
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = "LKR ${currencyFormatter.format(totalExpenseLkr)}",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -130,21 +137,22 @@ fun ExpenseCategoryChart(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 4.dp),
+                            .padding(vertical = 5.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
                                 modifier = Modifier
-                                    .size(10.dp)
+                                    .size(8.dp)
                                     .clip(CircleShape)
                                     .background(color)
                             )
                             Text(
                                 text = "  ${item.categoryName}",
                                 style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
 
@@ -152,7 +160,8 @@ fun ExpenseCategoryChart(
                             Text(
                                 text = "LKR ${currencyFormatter.format(item.totalLkr)}",
                                 style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
                                 text = " (${item.percentageOfTotal}%)",

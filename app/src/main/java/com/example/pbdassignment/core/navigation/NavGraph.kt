@@ -19,7 +19,7 @@ import com.example.pbdassignment.ui.navigation.MainAppScreen
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: String = if (FirebaseManager.isUserLoggedIn()) Screen.IncomeDashboard.route else Screen.Login.route
+    startDestination: String = Screen.Login.route
 ) {
     // Single shared repository & use-cases
     val authRepository = rememberAuthRepository()
@@ -72,7 +72,14 @@ fun NavGraph(
 
         // Main App Screen with Bottom Navigation (Dashboard, Income, Expenses, Goals, Analytics, Profile)
         composable(Screen.IncomeDashboard.route) {
-            MainAppScreen()
+            MainAppScreen(
+                onSignOut = {
+                    FirebaseManager.signOut()
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }

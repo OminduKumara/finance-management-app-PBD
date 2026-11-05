@@ -1,5 +1,6 @@
-﻿package com.example.pbdassignment.feature.goals
+package com.example.pbdassignment.feature.goals
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,14 +40,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pbdassignment.core.model.SavingsGoal
 import com.example.pbdassignment.feature.goals.components.AddContributionDialog
-import com.example.pbdassignment.ui.theme.EmeraldPrimary
+import com.example.pbdassignment.ui.theme.BrandPrimary
 import com.example.pbdassignment.ui.theme.ExpenseRed
+import com.example.pbdassignment.ui.theme.GoalGold
+import com.example.pbdassignment.ui.theme.IncomeGreen
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -78,11 +83,14 @@ fun GoalListScreen(
     }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onCreateGoalClick,
-                containerColor = MaterialTheme.colorScheme.primary
+                containerColor = BrandPrimary,
+                contentColor = Color.White,
+                shape = RoundedCornerShape(16.dp)
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Create Goal")
             }
@@ -93,28 +101,22 @@ fun GoalListScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             item {
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "Savings Goals",
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.ExtraBold
-                        )
-                        Text(
-                            text = "Aspirational targets linked to your cash flow",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "Savings Goals",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "Target-based funds protected from daily discretionary leaks",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
             if (uiState.goals.isEmpty()) {
@@ -127,7 +129,7 @@ fun GoalListScreen(
                     ) {
                         Text(
                             text = "No savings goals recorded yet.\nTap '+' below to add your first goal!",
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -144,7 +146,7 @@ fun GoalListScreen(
             }
 
             item {
-                Spacer(modifier = Modifier.height(72.dp))
+                Spacer(modifier = Modifier.height(80.dp))
             }
         }
     }
@@ -176,13 +178,12 @@ private fun GoalCardItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(modifier = Modifier.padding(18.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -191,9 +192,11 @@ private fun GoalCardItem(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = goal.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "Target: LKR ${currencyFormatter.format(goal.targetAmountLkr)}",
                         style = MaterialTheme.typography.bodySmall,
@@ -202,66 +205,78 @@ private fun GoalCardItem(
                 }
 
                 // Status Badge
-                val badgeColor = when {
-                    isAchieved -> EmeraldPrimary
-                    isOverdue -> ExpenseRed
-                    else -> MaterialTheme.colorScheme.primary
-                }
-                val badgeText = when {
-                    isAchieved -> "ACHIEVED"
-                    isOverdue -> "OVERDUE"
-                    else -> "ACTIVE"
+                val (badgeBg, badgeText, badgeColor) = when {
+                    isAchieved -> Triple(Color(0xFFECFDF5), "ACHIEVED", IncomeGreen)
+                    isOverdue -> Triple(Color(0xFFFEF2F2), "OVERDUE", ExpenseRed)
+                    else -> Triple(GoalGold.copy(alpha = 0.12f), "ACTIVE", GoalGold)
                 }
 
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(badgeColor.copy(alpha = 0.15f))
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = badgeBg
                 ) {
                     Text(
                         text = badgeText,
                         style = MaterialTheme.typography.labelSmall,
                         color = badgeColor,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Progress Bar & Percentage
+            // Progress Bar
             LinearProgressIndicator(
                 progress = { goal.progressFraction },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(10.dp)
-                    .clip(RoundedCornerShape(5.dp)),
-                color = if (isAchieved) EmeraldPrimary else MaterialTheme.colorScheme.primary,
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(3.dp)),
+                color = if (isAchieved) IncomeGreen else GoalGold,
                 trackColor = MaterialTheme.colorScheme.surfaceVariant
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = "Saved: LKR ${currencyFormatter.format(goal.totalSavedLkr)} ($progressPercent%)",
-                    style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = "Remaining: LKR ${currencyFormatter.format(goal.remainingAmountLkr)}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Column {
+                    Text(
+                        text = "Saved ($progressPercent%)",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "LKR ${currencyFormatter.format(goal.totalSavedLkr)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = IncomeGreen
+                    )
+                }
+
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "Remaining Deficit",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "LKR ${currencyFormatter.format(goal.remainingAmountLkr)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Actions
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
@@ -269,9 +284,14 @@ private fun GoalCardItem(
                 Button(
                     onClick = onQuickDeposit,
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    colors = ButtonDefaults.buttonColors(containerColor = BrandPrimary)
                 ) {
-                    Text(text = "+ Quick Deposit", fontSize = 13.sp)
+                    Text(
+                        text = "+ Quick Deposit",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White
+                    )
                 }
             }
         }
