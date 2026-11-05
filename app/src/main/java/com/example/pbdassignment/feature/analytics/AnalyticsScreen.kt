@@ -135,39 +135,45 @@ fun AnalyticsScreen(
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text("Inflow", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = "+LKR ${currencyFormatter.format(snapshot.totalIncomeLkr)}",
-                                    style = MaterialTheme.typography.bodyLarge,
+                                    style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = IncomeGreen
+                                    color = IncomeGreen,
+                                    maxLines = 1
                                 )
                             }
 
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text("Outflow", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = "-LKR ${currencyFormatter.format(snapshot.totalExpenseLkr)}",
-                                    style = MaterialTheme.typography.bodyLarge,
+                                    style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = ExpenseRed
+                                    color = ExpenseRed,
+                                    maxLines = 1
                                 )
                             }
 
-                            Column(horizontalAlignment = Alignment.End) {
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                horizontalAlignment = Alignment.End
+                            ) {
                                 Text("Savings Rate", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 val ratePercent = (snapshot.savingsRate * 100).toInt()
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = "$ratePercent%",
-                                    style = MaterialTheme.typography.bodyLarge,
+                                    style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (snapshot.savingsRate >= 0) BrandPrimary else ExpenseRed
+                                    color = if (snapshot.savingsRate >= 0) BrandPrimary else ExpenseRed,
+                                    maxLines = 1
                                 )
                             }
                         }

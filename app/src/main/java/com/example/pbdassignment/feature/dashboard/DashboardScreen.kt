@@ -291,9 +291,9 @@ fun DashboardScreen(
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "Inflows",
                                 style = MaterialTheme.typography.labelSmall,
@@ -302,13 +302,14 @@ fun DashboardScreen(
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "+LKR ${currencyFormatter.format(uiState.realizedIncomeLkr)}",
-                                style = MaterialTheme.typography.bodyLarge,
+                                style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = IncomeGreen
+                                color = IncomeGreen,
+                                maxLines = 1
                             )
                         }
 
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "Outflows",
                                 style = MaterialTheme.typography.labelSmall,
@@ -317,13 +318,17 @@ fun DashboardScreen(
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "-LKR ${currencyFormatter.format(uiState.totalExpenseLkr)}",
-                                style = MaterialTheme.typography.bodyLarge,
+                                style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = ExpenseRed
+                                color = ExpenseRed,
+                                maxLines = 1
                             )
                         }
 
-                        Column(horizontalAlignment = Alignment.End) {
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            horizontalAlignment = Alignment.End
+                        ) {
                             Text(
                                 text = "Net Surplus",
                                 style = MaterialTheme.typography.labelSmall,
@@ -332,9 +337,10 @@ fun DashboardScreen(
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "LKR ${currencyFormatter.format(uiState.netCashflowLkr)}",
-                                style = MaterialTheme.typography.bodyLarge,
+                                style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = if (uiState.netCashflowLkr >= 0) BrandPrimary else ExpenseRed
+                                color = if (uiState.netCashflowLkr >= 0) BrandPrimary else ExpenseRed,
+                                maxLines = 1
                             )
                         }
                     }
