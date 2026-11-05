@@ -1,4 +1,4 @@
-﻿package com.example.pbdassignment.data.repository
+package com.example.pbdassignment.data.repository
 
 import android.util.Log
 import com.example.pbdassignment.core.firebase.FirebaseManager
@@ -118,6 +118,12 @@ class GoalRepositoryImpl(
 
         if (targetFound) {
             syncContributionToFirestore(contribution)
+            _goals.value.find { it.id == "macbook_pro_m4" }?.let { macBook ->
+                com.example.pbdassignment.core.data.FinanceRepository.setGoalFromRemote(
+                    macBook.targetAmountLkr,
+                    macBook.totalSavedLkr
+                )
+            }
             return Result.success(Unit)
         }
         return Result.failure(NoSuchElementException("Goal not found for contribution: ${contribution.goalId}"))
@@ -135,6 +141,12 @@ class GoalRepositoryImpl(
             }
         }
         deleteContributionFromFirestore(goalId, contributionId)
+        _goals.value.find { it.id == "macbook_pro_m4" }?.let { macBook ->
+            com.example.pbdassignment.core.data.FinanceRepository.setGoalFromRemote(
+                macBook.targetAmountLkr,
+                macBook.totalSavedLkr
+            )
+        }
         return Result.success(Unit)
     }
 

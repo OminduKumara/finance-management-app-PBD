@@ -1,4 +1,4 @@
-﻿package com.example.pbdassignment.feature.profile
+package com.example.pbdassignment.feature.profile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -57,7 +57,9 @@ import java.text.NumberFormat
 import java.util.Locale
 
 @Composable
-fun ProfileScreen() {
+fun ProfileScreen(
+    onSignOut: () -> Unit = {}
+) {
     val currentUser by FirebaseManager.currentUser.collectAsState()
     val baseline by FinanceRepository.baseline.collectAsState()
 
@@ -377,7 +379,10 @@ fun ProfileScreen() {
         // Sign Out Button
         item {
             OutlinedButton(
-                onClick = { FirebaseManager.signOut() },
+                onClick = {
+                    FirebaseManager.signOut()
+                    onSignOut()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),

@@ -1,4 +1,4 @@
-﻿package com.example.pbdassignment.feature.authentication.presentation
+package com.example.pbdassignment.feature.authentication.presentation
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -137,7 +137,7 @@ fun LoginScreen(
                     .fillMaxWidth()
                     .height(48.dp)
             ) {
-                Text("?? Launch as Kavindu Silva (Live Demo)")
+                Text("🚀 Launch as Kavindu Silva (Live Demo)")
             }
         }
     }

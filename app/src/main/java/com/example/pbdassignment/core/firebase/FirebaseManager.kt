@@ -118,7 +118,7 @@ object FirebaseManager {
                     Log.w(TAG, "Listen incomes failed: ${error.message}")
                     return@addSnapshotListener
                 }
-                if (snapshot != null && !snapshot.isEmpty) {
+                if (snapshot != null) {
                     val remoteIncomes = snapshot.documents.mapNotNull { doc ->
                         try {
                             IncomeItem(
@@ -130,15 +130,15 @@ object FirebaseManager {
                                 currency = doc.getString("currency") ?: "LKR",
                                 exchangeRate = doc.getDouble("exchangeRate") ?: 1.0,
                                 lkrAmount = doc.getDouble("lkrAmount") ?: 0.0,
-                                invoiceStatus = InvoiceStatus.valueOf(doc.getString("invoiceStatus") ?: "RECEIVED")
+                                invoiceStatus = InvoiceStatus.valueOf(doc.getString("invoiceStatus") ?: "RECEIVED"),
+                                date = doc.getLong("date") ?: System.currentTimeMillis(),
+                                dueDate = doc.getLong("dueDate")
                             )
                         } catch (e: Exception) {
                             null
                         }
                     }
-                    if (remoteIncomes.isNotEmpty()) {
-                        remoteIncomes.forEach { FinanceRepository.addIncome(it) }
-                    }
+                    FinanceRepository.setIncomesFromRemote(remoteIncomes)
                 }
             }
 
@@ -150,7 +150,7 @@ object FirebaseManager {
                     Log.w(TAG, "Listen expenses failed: ${error.message}")
                     return@addSnapshotListener
                 }
-                if (snapshot != null && !snapshot.isEmpty) {
+                if (snapshot != null) {
                     val remoteExpenses = snapshot.documents.mapNotNull { doc ->
                         try {
                             ExpenseItem(
@@ -160,15 +160,14 @@ object FirebaseManager {
                                 nature = ExpenseNature.valueOf(doc.getString("nature") ?: "DISCRETIONARY"),
                                 paymentSource = PaymentSource.valueOf(doc.getString("paymentSource") ?: "PRIMARY_CARD"),
                                 merchantPreset = doc.getString("merchantPreset"),
-                                notes = doc.getString("notes") ?: ""
+                                notes = doc.getString("notes") ?: "",
+                                timestamp = doc.getLong("timestamp") ?: System.currentTimeMillis()
                             )
                         } catch (e: Exception) {
                             null
                         }
                     }
-                    if (remoteExpenses.isNotEmpty()) {
-                        remoteExpenses.forEach { FinanceRepository.addExpense(it) }
-                    }
+                    FinanceRepository.setExpensesFromRemote(remoteExpenses)
                 }
             }
 
@@ -177,10 +176,13 @@ object FirebaseManager {
             .collection("goals").document("macbook_pro_m4")
             .addSnapshotListener { doc, error ->
                 if (error != null || doc == null || !doc.exists()) return@addSnapshotListener
-                val saved = doc.getDouble("currentSaved") ?: 11200.0
-                val target = doc.getDouble("targetAmount") ?: 490000.0
-                FinanceRepository.updateGoalTarget(target)
-                FinanceRepository.allocateToGoal(saved - FinanceRepository.goal.value.currentSaved)
+                val saved = doc.getDouble("totalSavedLkr")
+                    ?: doc.getDouble("currentSaved")
+                    ?: 11200.0
+                val target = doc.getDouble("targetAmountLkr")
+                    ?: doc.getDouble("targetAmount")
+                    ?: 490000.0
+                FinanceRepository.setGoalFromRemote(target, saved)
             }
     }
 
@@ -197,7 +199,8 @@ object FirebaseManager {
             "exchangeRate" to income.exchangeRate,
             "lkrAmount" to income.lkrAmount,
             "invoiceStatus" to income.invoiceStatus.name,
-            "date" to income.date
+            "date" to income.date,
+            "dueDate" to income.dueDate
         )
         firestore.collection("users").document(uid)
             .collection("incomes").document(income.id)
