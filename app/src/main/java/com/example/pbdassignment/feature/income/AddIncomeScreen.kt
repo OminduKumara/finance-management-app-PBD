@@ -25,6 +25,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -41,6 +42,12 @@ fun AddIncomeScreen(
     onEvent: (IncomeUiEvent) -> Unit,
     onNavigateBack: () -> Unit
 ) {
+    LaunchedEffect(state.successMessage) {
+        if (state.successMessage != null) {
+            onNavigateBack()
+            onEvent(IncomeUiEvent.ClearMessage)
+        }
+    }
     Scaffold(
         topBar = {
             TopAppBar(

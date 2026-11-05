@@ -35,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -60,6 +61,12 @@ fun CryptoPnLScreen(
     onEvent: (IncomeUiEvent) -> Unit,
     onNavigateBack: () -> Unit
 ) {
+    LaunchedEffect(state.successMessage) {
+        if (state.successMessage != null) {
+            onNavigateBack()
+            onEvent(IncomeUiEvent.ClearMessage)
+        }
+    }
     val fmt = NumberFormat.getNumberInstance(Locale.US).apply {
         minimumFractionDigits = 2; maximumFractionDigits = 2
     }
