@@ -54,6 +54,22 @@ class RecurringExpenseGenerator(
                         )
                     )
 
+                    com.example.pbdassignment.core.data.FinanceRepository.addExpense(
+                        com.example.pbdassignment.core.model.ExpenseItem(
+                            id = expenseId,
+                            amount = recurring.amount,
+                            category = recurring.categoryName,
+                            nature = com.example.pbdassignment.core.model.ExpenseNature.COMMITTED,
+                            paymentSource = when (recurring.paymentMethod.lowercase()) {
+                                "credit card", "credit_card", "card" -> com.example.pbdassignment.core.model.PaymentSource.PRIMARY_CARD
+                                "bank transfer", "debit card" -> com.example.pbdassignment.core.model.PaymentSource.SECONDARY_ACCOUNT
+                                else -> com.example.pbdassignment.core.model.PaymentSource.CASH
+                            },
+                            merchantPreset = recurring.title,
+                            notes = recurring.notes
+                        )
+                    )
+
                     occurrenceDate = nextDate
                     nextDate = getNextDate(
                         occurrenceDate,
