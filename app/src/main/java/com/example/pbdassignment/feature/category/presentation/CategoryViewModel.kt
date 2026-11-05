@@ -22,26 +22,31 @@ class CategoryViewModel(
     fun addCategory(category: Category) {
         viewModelScope.launch {
             repository.addCategory(category)
+            com.example.pbdassignment.core.firebase.FirebaseManager.syncCategory(category)
         }
     }
 
     fun updateCategory(category: Category) {
         viewModelScope.launch {
             repository.updateCategory(category)
+            com.example.pbdassignment.core.firebase.FirebaseManager.syncCategory(category)
         }
     }
 
     fun deleteCategory(id: String) {
         viewModelScope.launch {
             repository.deleteCategory(id)
+            com.example.pbdassignment.core.firebase.FirebaseManager.deleteCategory(id)
         }
     }
 
     fun insertDefaultCategories() {
         viewModelScope.launch {
-            repository.insertDefaultCategories(
-                com.example.pbdassignment.feature.category.data.DefaultCategories.categories
-            )
+            val defaults = com.example.pbdassignment.feature.category.data.DefaultCategories.categories
+            repository.insertDefaultCategories(defaults)
+            defaults.forEach {
+                com.example.pbdassignment.core.firebase.FirebaseManager.syncCategory(it)
+            }
         }
     }
 }
