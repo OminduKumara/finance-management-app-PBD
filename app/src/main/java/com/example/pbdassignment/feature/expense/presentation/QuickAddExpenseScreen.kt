@@ -1,7 +1,9 @@
 package com.example.pbdassignment.feature.expense.presentation
 
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,11 +19,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Payment
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -29,9 +29,11 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -40,13 +42,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.pbdassignment.feature.category.domain.Category
 import com.example.pbdassignment.feature.expense.domain.Expense
-import com.example.pbdassignment.ui.theme.CommittedBlue
-import com.example.pbdassignment.ui.theme.DiscretionaryOrange
 
 @Composable
 fun QuickAddExpenseScreen(
@@ -77,12 +79,11 @@ fun QuickAddExpenseScreen(
     }
 
     val paymentMethods = listOf(
-        "Cash",
         "Credit Card",
         "Debit Card",
+        "Cash",
         "Bank Transfer",
-        "PickMe / Ride",
-        "UberEats / Food"
+        "Other"
     )
 
     var selectedPaymentMethod by remember(initialExpense?.id) {
@@ -99,83 +100,150 @@ fun QuickAddExpenseScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .background(Color(0xFFF9FAFB))
             .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+            .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Header
+        // Simple Top Bar
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
-                Text(
-                    text = if (initialExpense == null) "Record Outflow" else "Edit Outflow",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.ExtraBold
-                )
-                Text(
-                    text = "Track expenses with category & payment details",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+            Text(
+                text = if (initialExpense == null) "New Expense" else "Edit Expense",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF111827),
+                fontSize = 20.sp
+            )
+
+            IconButton(onClick = onCancel) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close",
+                    tint = Color(0xFF4B5563)
                 )
             }
         }
 
+        // Form Fields in Clean Card
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            border = BorderStroke(1.dp, Color(0xFFE5E7EB)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                    .padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Title
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    label = { Text("Expense Title / Merchant") },
-                    placeholder = { Text("e.g., Keells Super, PickMe Ride, Rent") },
-                    leadingIcon = {
-                        Icon(Icons.Default.Edit, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    singleLine = true
-                )
-
-                // Amount
-                OutlinedTextField(
-                    value = amountText,
-                    onValueChange = { amountText = it },
-                    label = { Text("Amount (LKR)") },
-                    leadingIcon = {
-                        Text(
-                            text = "LKR",
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(start = 12.dp, end = 4.dp)
-                        )
-                    },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    singleLine = true,
-                    isError = amountText.isNotBlank() && !isAmountValid
-                )
-
-                // Nature Selector (Committed vs Discretionary)
+                // Title Field
                 Column {
                     Text(
-                        text = "Expense Nature",
+                        text = "Title",
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF374151),
+                        fontSize = 13.sp
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    OutlinedTextField(
+                        value = title,
+                        onValueChange = { title = it },
+                        placeholder = { Text("e.g. Netflix, Keells, Rent", color = Color(0xFF9CA3AF), fontSize = 14.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color(0xFFD1D5DB),
+                            focusedBorderColor = Color(0xFF111827)
+                        )
+                    )
+                }
+
+                // Amount Field
+                Column {
+                    Text(
+                        text = "Amount (LKR)",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF374151),
+                        fontSize = 13.sp
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    OutlinedTextField(
+                        value = amountText,
+                        onValueChange = { amountText = it },
+                        placeholder = { Text("0.00", color = Color(0xFF9CA3AF), fontSize = 14.sp) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color(0xFFD1D5DB),
+                            focusedBorderColor = Color(0xFF111827)
+                        )
+                    )
+                }
+
+                // Category Dropdown
+                Column {
+                    Text(
+                        text = "Category",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF374151),
+                        fontSize = 13.sp
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Box {
+                        OutlinedButton(
+                            onClick = { categoryMenuExpanded = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, Color(0xFFD1D5DB)),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF111827))
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(selectedCategory, fontSize = 14.sp)
+                                Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = Color(0xFF6B7280))
+                            }
+                        }
+
+                        DropdownMenu(
+                            expanded = categoryMenuExpanded,
+                            onDismissRequest = { categoryMenuExpanded = false }
+                        ) {
+                            categories.forEach { category ->
+                                DropdownMenuItem(
+                                    text = { Text(category.name, fontSize = 14.sp) },
+                                    onClick = {
+                                        selectedCategory = category.name
+                                        categoryMenuExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Nature: Fixed vs Lifestyle (Minimalist Toggle)
+                Column {
+                    Text(
+                        text = "Type",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF374151),
+                        fontSize = 13.sp
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Row(
@@ -185,131 +253,96 @@ fun QuickAddExpenseScreen(
                         FilterChip(
                             selected = isCommitted,
                             onClick = { isCommitted = true },
-                            label = { Text("Committed (Fixed Bills)") },
+                            label = { Text("Fixed (Bill / Rent)", fontSize = 12.sp) },
+                            shape = RoundedCornerShape(8.dp),
                             colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = CommittedBlue.copy(alpha = 0.2f),
-                                selectedLabelColor = CommittedBlue
+                                selectedContainerColor = Color(0xFF1F2937),
+                                selectedLabelColor = Color.White,
+                                containerColor = Color.Transparent,
+                                labelColor = Color(0xFF4B5563)
                             ),
+                            border = BorderStroke(1.dp, if (isCommitted) Color(0xFF1F2937) else Color(0xFFD1D5DB)),
                             modifier = Modifier.weight(1f)
                         )
                         FilterChip(
                             selected = !isCommitted,
                             onClick = { isCommitted = false },
-                            label = { Text("Lifestyle (Discretionary)") },
+                            label = { Text("Lifestyle", fontSize = 12.sp) },
+                            shape = RoundedCornerShape(8.dp),
                             colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = DiscretionaryOrange.copy(alpha = 0.2f),
-                                selectedLabelColor = DiscretionaryOrange
+                                selectedContainerColor = Color(0xFF1F2937),
+                                selectedLabelColor = Color.White,
+                                containerColor = Color.Transparent,
+                                labelColor = Color(0xFF4B5563)
                             ),
+                            border = BorderStroke(1.dp, if (!isCommitted) Color(0xFF1F2937) else Color(0xFFD1D5DB)),
                             modifier = Modifier.weight(1f)
                         )
                     }
                 }
 
-                // Category Selector
-                Column {
-                    Text(
-                        text = "Category",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    OutlinedButton(
-                        onClick = { categoryMenuExpanded = true },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(text = selectedCategory, fontWeight = FontWeight.Medium)
-                            Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-                        }
-                    }
-
-                    DropdownMenu(
-                        expanded = categoryMenuExpanded,
-                        onDismissRequest = { categoryMenuExpanded = false }
-                    ) {
-                        categories.forEach { category ->
-                            DropdownMenuItem(
-                                text = { Text("${category.icon} ${category.name}") },
-                                onClick = {
-                                    selectedCategory = category.name
-                                    categoryMenuExpanded = false
-                                }
-                            )
-                        }
-                    }
-                }
-
-                // Payment Method Selector
+                // Payment Method Dropdown
                 Column {
                     Text(
                         text = "Payment Method",
                         style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF374151),
+                        fontSize = 13.sp
                     )
                     Spacer(modifier = Modifier.height(6.dp))
-                    OutlinedButton(
-                        onClick = { paymentMenuExpanded = true },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Row(
+                    Box {
+                        OutlinedButton(
+                            onClick = { paymentMenuExpanded = true },
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, Color(0xFFD1D5DB)),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF111827))
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    Icons.Default.Payment,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(text = selectedPaymentMethod, fontWeight = FontWeight.Medium)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(selectedPaymentMethod, fontSize = 14.sp)
+                                Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = Color(0xFF6B7280))
                             }
-                            Icon(Icons.Default.ArrowDropDown, contentDescription = null)
                         }
-                    }
 
-                    DropdownMenu(
-                        expanded = paymentMenuExpanded,
-                        onDismissRequest = { paymentMenuExpanded = false }
-                    ) {
-                        paymentMethods.forEach { method ->
-                            DropdownMenuItem(
-                                text = { Text(method) },
-                                onClick = {
-                                    selectedPaymentMethod = method
-                                    paymentMenuExpanded = false
-                                }
-                            )
+                        DropdownMenu(
+                            expanded = paymentMenuExpanded,
+                            onDismissRequest = { paymentMenuExpanded = false }
+                        ) {
+                            paymentMethods.forEach { method ->
+                                DropdownMenuItem(
+                                    text = { Text(method, fontSize = 14.sp) },
+                                    onClick = {
+                                        selectedPaymentMethod = method
+                                        paymentMenuExpanded = false
+                                    }
+                                )
+                            }
                         }
                     }
                 }
             }
         }
 
-        // Action Buttons Row
+        // Action Buttons
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             OutlinedButton(
                 onClick = onCancel,
                 modifier = Modifier
                     .weight(1f)
-                    .height(50.dp),
-                shape = RoundedCornerShape(12.dp)
+                    .height(48.dp),
+                shape = RoundedCornerShape(8.dp),
+                border = BorderStroke(1.dp, Color(0xFFD1D5DB)),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF374151))
             ) {
-                Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(6.dp))
-                Text("Cancel")
+                Text("Cancel", fontSize = 14.sp, fontWeight = FontWeight.Medium)
             }
 
             Button(
@@ -321,12 +354,19 @@ fun QuickAddExpenseScreen(
                 enabled = isFormValid,
                 modifier = Modifier
                     .weight(1f)
-                    .height(50.dp),
-                shape = RoundedCornerShape(12.dp)
+                    .height(48.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF111827),
+                    disabledContainerColor = Color(0xFFE5E7EB)
+                )
             ) {
-                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(if (initialExpense == null) "Save" else "Update")
+                Text(
+                    text = if (initialExpense == null) "Save" else "Update",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = if (isFormValid) Color.White else Color(0xFF9CA3AF)
+                )
             }
         }
     }

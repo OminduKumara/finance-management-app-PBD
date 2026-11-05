@@ -1,5 +1,6 @@
 package com.example.pbdassignment.feature.expense.presentation
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,20 +11,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ReceiptLong
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -33,8 +30,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.pbdassignment.feature.expense.components.ExpenseCard
 import com.example.pbdassignment.feature.expense.domain.Expense
 
@@ -58,83 +57,93 @@ fun ExpenseListScreen(
     }
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        modifier = modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        // Category Filter Chips
+        // Category Filter Chips (Minimalist)
         if (categories.isNotEmpty()) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
                     .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 FilterChip(
                     selected = selectedCategoryFilter == null,
                     onClick = { selectedCategoryFilter = null },
-                    label = { Text("All (${expenses.size})") }
+                    label = { Text("All (${expenses.size})", fontSize = 12.sp) },
+                    shape = RoundedCornerShape(8.dp),
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = Color(0xFF1F2937),
+                        selectedLabelColor = Color.White,
+                        containerColor = Color.Transparent,
+                        labelColor = Color(0xFF4B5563)
+                    ),
+                    border = BorderStroke(
+                        1.dp,
+                        if (selectedCategoryFilter == null) Color(0xFF1F2937) else Color(0xFFE5E7EB)
+                    )
                 )
+
                 categories.forEach { category ->
+                    val isSelected = selectedCategoryFilter == category
                     val count = expenses.count { it.categoryName == category }
                     FilterChip(
-                        selected = selectedCategoryFilter == category,
+                        selected = isSelected,
                         onClick = {
-                            selectedCategoryFilter = if (selectedCategoryFilter == category) null else category
+                            selectedCategoryFilter = if (isSelected) null else category
                         },
-                        label = { Text("$category ($count)") }
+                        label = { Text("$category ($count)", fontSize = 12.sp) },
+                        shape = RoundedCornerShape(8.dp),
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = Color(0xFF1F2937),
+                            selectedLabelColor = Color.White,
+                            containerColor = Color.Transparent,
+                            labelColor = Color(0xFF4B5563)
+                        ),
+                        border = BorderStroke(
+                            1.dp,
+                            if (isSelected) Color(0xFF1F2937) else Color(0xFFE5E7EB)
+                        )
                     )
                 }
             }
         }
 
-        // Expenses List or Empty State
+        // Expenses List
         if (filteredExpenses.isEmpty()) {
-            Card(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 24.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ReceiptLong,
-                        contentDescription = null,
-                        modifier = Modifier.size(48.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
                     Text(
-                        text = if (selectedCategoryFilter == null) "No Outflows Recorded" else "No $selectedCategoryFilter Outflows",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Record PickMe rides, grocery runs, rent, or utilities to keep track of spending leaks.",
+                        text = "No expenses recorded",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF6B7280)
                     )
-                    Button(
+                    OutlinedButton(
                         onClick = onAddExpenseClick,
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, Color(0xFFD1D5DB))
                     ) {
-                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.size(6.dp))
-                        Text("Add Outflow")
+                        Text("Add Expense", color = Color(0xFF111827), fontSize = 13.sp)
                     }
                 }
             }
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(
                     items = filteredExpenses,
