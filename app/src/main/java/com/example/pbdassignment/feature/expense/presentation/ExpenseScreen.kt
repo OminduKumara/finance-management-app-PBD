@@ -1,4 +1,4 @@
-package com.example.pbdassignment.feature.expense
+package com.example.pbdassignment.feature.expense.presentation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
