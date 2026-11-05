@@ -128,8 +128,8 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(12.dp))
             OutlinedButton(
                 onClick = {
-                    com.example.pbdassignment.core.firebase.FirebaseManager.signInAsDemoKavindu { success, _ ->
-                        if (success) onLoginSuccess()
+                    com.example.pbdassignment.core.firebase.FirebaseManager.signInAsDemoKavindu { _, _ ->
+                        onLoginSuccess()
                     }
                 },
                 shape = RoundedCornerShape(12.dp),
@@ -137,7 +137,7 @@ fun LoginScreen(
                     .fillMaxWidth()
                     .height(48.dp)
             ) {
-                Text("?? Launch as Kavindu Silva (Live Demo)")
+                Text("🚀 Launch as Kavindu Silva (Live Demo)")
             }
         }
     }

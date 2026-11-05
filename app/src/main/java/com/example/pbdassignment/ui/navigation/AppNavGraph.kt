@@ -19,7 +19,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.pbdassignment.feature.analytics.AnalyticsScreen
 import com.example.pbdassignment.feature.dashboard.DashboardScreen
-import com.example.pbdassignment.feature.expense.ExpenseScreen
+import com.example.pbdassignment.feature.expense.presentation.ExpenseScreen
 import com.example.pbdassignment.feature.goals.CreateGoalScreen
 import com.example.pbdassignment.feature.goals.GoalDetailScreen
 import com.example.pbdassignment.feature.goals.GoalListScreen

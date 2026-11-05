@@ -10,6 +10,9 @@ import com.example.pbdassignment.core.model.IncomeItem
 import com.example.pbdassignment.core.model.IncomeStreams
 import com.example.pbdassignment.core.model.InvoiceStatus
 import com.example.pbdassignment.core.model.PaymentSource
+import com.example.pbdassignment.feature.category.domain.Category
+import com.example.pbdassignment.feature.expense.domain.Expense
+import com.example.pbdassignment.feature.recurring.domain.RecurringExpense
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
@@ -223,6 +226,92 @@ object FirebaseManager {
             .collection("expenses").document(expense.id)
             .set(docData)
             .addOnFailureListener { Log.w(TAG, "Sync expense failed: ${it.message}") }
+    }
+
+    fun syncExpense(expense: Expense) {
+        val uid = auth.currentUser?.uid ?: return
+        val docData = hashMapOf(
+            "id" to expense.id,
+            "userId" to uid,
+            "title" to expense.title,
+            "amount" to expense.amount,
+            "currencyCode" to expense.currencyCode,
+            "categoryId" to expense.categoryId,
+            "categoryName" to expense.categoryName,
+            "dateMillis" to expense.dateMillis,
+            "isCommitted" to expense.isCommitted,
+            "paymentMethod" to expense.paymentMethod,
+            "notes" to expense.notes,
+            "category" to expense.categoryName,
+            "nature" to if (expense.isCommitted) "COMMITTED" else "DISCRETIONARY",
+            "paymentSource" to when (expense.paymentMethod.lowercase()) {
+                "credit card", "credit_card", "card" -> "PRIMARY_CARD"
+                "bank transfer", "debit card" -> "SECONDARY_ACCOUNT"
+                else -> "CASH"
+            },
+            "merchantPreset" to expense.title,
+            "timestamp" to expense.dateMillis
+        )
+        firestore.collection("users").document(uid)
+            .collection("expenses").document(expense.id)
+            .set(docData)
+            .addOnFailureListener { Log.w(TAG, "Sync expense failed: ${it.message}") }
+    }
+
+    fun syncCategory(category: Category) {
+        val uid = auth.currentUser?.uid ?: return
+        val docData = hashMapOf(
+            "id" to category.id,
+            "userId" to uid,
+            "name" to category.name,
+            "icon" to category.icon,
+            "color" to category.color,
+            "isDefault" to category.isDefault
+        )
+        firestore.collection("users").document(uid)
+            .collection("categories").document(category.id)
+            .set(docData)
+            .addOnFailureListener { Log.w(TAG, "Sync category failed: ${it.message}") }
+    }
+
+    fun deleteCategory(id: String) {
+        val uid = auth.currentUser?.uid ?: return
+        firestore.collection("users").document(uid)
+            .collection("categories").document(id)
+            .delete()
+            .addOnFailureListener { Log.w(TAG, "Delete category failed: ${it.message}") }
+    }
+
+    fun syncRecurringExpense(recurring: RecurringExpense) {
+        val uid = auth.currentUser?.uid ?: return
+        val docData = hashMapOf(
+            "id" to recurring.id,
+            "userId" to uid,
+            "title" to recurring.title,
+            "amount" to recurring.amount,
+            "currencyCode" to recurring.currencyCode,
+            "categoryId" to recurring.categoryId,
+            "categoryName" to recurring.categoryName,
+            "paymentMethod" to recurring.paymentMethod,
+            "frequency" to recurring.frequency,
+            "startDateMillis" to recurring.startDateMillis,
+            "endDateMillis" to (recurring.endDateMillis ?: 0L),
+            "isActive" to recurring.isActive,
+            "notes" to recurring.notes,
+            "lastGeneratedDateMillis" to (recurring.lastGeneratedDateMillis ?: 0L)
+        )
+        firestore.collection("users").document(uid)
+            .collection("recurring_expenses").document(recurring.id)
+            .set(docData)
+            .addOnFailureListener { Log.w(TAG, "Sync recurring expense failed: ${it.message}") }
+    }
+
+    fun deleteRecurringExpense(id: String) {
+        val uid = auth.currentUser?.uid ?: return
+        firestore.collection("users").document(uid)
+            .collection("recurring_expenses").document(id)
+            .delete()
+            .addOnFailureListener { Log.w(TAG, "Delete recurring expense failed: ${it.message}") }
     }
 
     fun deleteIncome(id: String) {
