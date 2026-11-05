@@ -1,6 +1,8 @@
 package com.example.pbdassignment.feature.expense.data
 
+import android.content.Context
 import androidx.room.Database
+import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.pbdassignment.feature.category.data.CategoryDao
 import com.example.pbdassignment.feature.category.data.CategoryEntity
@@ -29,9 +31,25 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun recurringExpenseDao(): RecurringExpenseDao
 
     companion object {
+        @Volatile
+        private var INSTANCE: AppDatabase? = null
+
+        fun getInstance(context: Context): AppDatabase {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "pbd_database"
+                )
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                    .build()
+                    .also { INSTANCE = it }
+            }
+        }
+
         val MIGRATION_1_2 = object : Migration(1, 2) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
                     """
             CREATE TABLE IF NOT EXISTS categories (
                 id TEXT NOT NULL,
@@ -46,8 +64,8 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
         val MIGRATION_2_3 = object : Migration(2, 3) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL(
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
                     """
             CREATE TABLE IF NOT EXISTS recurring_expenses (
                 id TEXT NOT NULL,

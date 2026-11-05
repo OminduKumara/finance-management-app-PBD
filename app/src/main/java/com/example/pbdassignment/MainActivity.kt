@@ -1,4 +1,4 @@
-﻿package com.example.pbdassignment
+package com.example.pbdassignment
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -25,16 +25,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             PbdassignmentTheme {
                 val database = remember {
-                    Room.databaseBuilder(
-                        applicationContext,
-                        AppDatabase::class.java,
-                        "pbd_database"
-                    )
-                        .addMigrations(
-                            AppDatabase.MIGRATION_1_2,
-                            AppDatabase.MIGRATION_2_3
-                        )
-                        .build()
+                    AppDatabase.getInstance(applicationContext)
                 }
 
                 val categoryRepository = remember {
