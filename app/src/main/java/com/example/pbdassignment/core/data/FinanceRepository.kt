@@ -130,15 +130,6 @@ object FinanceRepository {
         com.example.pbdassignment.core.firebase.FirebaseManager.syncIncome(income)
     }
 
-    /**
-     * Updates local incomes from Firestore remote listener without re-syncing to prevent infinite loops.
-     */
-    fun setIncomesFromRemote(remoteIncomes: List<IncomeItem>) {
-        if (remoteIncomes.isNotEmpty()) {
-            _incomes.value = remoteIncomes
-        }
-    }
-
     fun updateInvoiceStatus(id: String, newStatus: InvoiceStatus) {
         _incomes.update { list ->
             list.map { if (it.id == id) it.copy(invoiceStatus = newStatus) else it }
@@ -161,27 +152,12 @@ object FinanceRepository {
         com.example.pbdassignment.core.firebase.FirebaseManager.syncExpense(expense)
     }
 
-    /**
-     * Updates local expenses from Firestore remote listener without re-syncing to prevent infinite loops.
-     */
-    fun setExpensesFromRemote(remoteExpenses: List<ExpenseItem>) {
-        if (remoteExpenses.isNotEmpty()) {
-            _expenses.value = remoteExpenses
-        }
-    }
-
     fun deleteExpense(id: String) {
         _expenses.update { list -> list.filterNot { it.id == id } }
         com.example.pbdassignment.core.firebase.FirebaseManager.deleteExpense(id)
     }
 
     // --- Goal Methods ---
-    /**
-     * Updates goal from remote sync or shared goal repository without echoing back to Firestore.
-     */
-    fun setGoalFromRemote(target: Double, saved: Double) {
-        _goal.update { it.copy(targetAmount = target, currentSaved = saved) }
-    }
     fun allocateToGoal(amount: Double) {
         if (amount <= 0) return
         _goal.update { current ->

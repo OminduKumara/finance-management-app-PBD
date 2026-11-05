@@ -72,13 +72,7 @@ fun NavGraph(
 
         // Main App Screen with Bottom Navigation (Dashboard, Income, Expenses, Goals, Analytics, Profile)
         composable(Screen.IncomeDashboard.route) {
-            MainAppScreen(
-                onSignOut = {
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.IncomeDashboard.route) { inclusive = true }
-                    }
-                }
-            )
+            MainAppScreen()
         }
     }
 }

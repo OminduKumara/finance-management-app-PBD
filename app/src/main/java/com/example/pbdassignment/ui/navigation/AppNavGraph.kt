@@ -24,9 +24,9 @@ import com.example.pbdassignment.feature.income.IncomeScreen
 import com.example.pbdassignment.feature.profile.ProfileScreen
 
 @Composable
-fun MainAppScreen(
-    onSignOut: () -> Unit = {}
-) {
+fun MainAppScreen() {
+
+
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -68,38 +68,10 @@ fun MainAppScreen(
         ) {
             composable(Screen.Dashboard.route) {
                 DashboardScreen(
-                    onNavigateToAnalytics = {
-                        navController.navigate(AnalyticsRoutes.ANALYTICS) {
-                            launchSingleTop = true
-                        }
-                    },
-                    onNavigateToIncome = {
-                        navController.navigate(Screen.Income.route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                    onNavigateToExpenses = {
-                        navController.navigate(Screen.Expenses.route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                    onNavigateToGoals = {
-                        navController.navigate(Screen.Goals.route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
+                    onNavigateToAnalytics = { navController.navigate(AnalyticsRoutes.ANALYTICS) },
+                    onNavigateToIncome = { navController.navigate(Screen.Income.route) },
+                    onNavigateToExpenses = { navController.navigate(Screen.Expenses.route) },
+                    onNavigateToGoals = { navController.navigate(Screen.Goals.route) }
                 )
             }
             composable(Screen.Income.route) {
@@ -130,7 +102,7 @@ fun MainAppScreen(
                 AnalyticsScreen()
             }
             composable(Screen.Profile.route) {
-                ProfileScreen(onSignOut = onSignOut)
+                ProfileScreen()
             }
         }
     }

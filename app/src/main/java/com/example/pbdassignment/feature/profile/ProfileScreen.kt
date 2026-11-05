@@ -57,9 +57,7 @@ import java.text.NumberFormat
 import java.util.Locale
 
 @Composable
-fun ProfileScreen(
-    onSignOut: () -> Unit = {}
-) {
+fun ProfileScreen() {
     val currentUser by FirebaseManager.currentUser.collectAsState()
     val baseline by FinanceRepository.baseline.collectAsState()
 
@@ -379,10 +377,7 @@ fun ProfileScreen(
         // Sign Out Button
         item {
             OutlinedButton(
-                onClick = {
-                    FirebaseManager.signOut()
-                    onSignOut()
-                },
+                onClick = { FirebaseManager.signOut() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
