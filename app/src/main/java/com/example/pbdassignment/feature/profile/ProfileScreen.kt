@@ -1,4 +1,4 @@
-﻿package com.example.pbdassignment.feature.profile
+package com.example.pbdassignment.feature.profile
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -57,9 +57,17 @@ import java.text.NumberFormat
 import java.util.Locale
 
 @Composable
-fun ProfileScreen() {
+fun ProfileScreen(
+    onSignOut: () -> Unit = {}
+) {
     val currentUser by FirebaseManager.currentUser.collectAsState()
     val baseline by FinanceRepository.baseline.collectAsState()
+
+    val displayName = remember(currentUser) {
+        currentUser?.displayName?.takeIf { it.isNotBlank() }
+            ?: currentUser?.email?.substringBefore('@')?.replaceFirstChar { it.uppercase() }
+            ?: "Kavindu Silva"
+    }
 
     var showEditBaselineDialog by remember { mutableStateOf(false) }
     var newRuleText by remember { mutableStateOf("") }
@@ -125,12 +133,16 @@ fun ProfileScreen() {
 
                     Column {
                         Text(
-                            text = "Kavindu Silva",
+                            text = displayName,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Junior Software Engineer • Colombo",
+                            text = if (currentUser?.email == null || currentUser?.email?.contains("kavindu") == true) {
+                                "Junior Software Engineer • Colombo"
+                            } else {
+                                "Personal Account"
+                            },
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -377,7 +389,10 @@ fun ProfileScreen() {
         // Sign Out Button
         item {
             OutlinedButton(
-                onClick = { FirebaseManager.signOut() },
+                onClick = {
+                    FirebaseManager.signOut()
+                    onSignOut()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),

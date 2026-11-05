@@ -24,7 +24,9 @@ import com.example.pbdassignment.feature.income.IncomeScreen
 import com.example.pbdassignment.feature.profile.ProfileScreen
 
 @Composable
-fun MainAppScreen() {
+fun MainAppScreen(
+    onSignOut: () -> Unit = {}
+) {
 
 
     val navController = rememberNavController()
@@ -102,7 +104,7 @@ fun MainAppScreen() {
                 AnalyticsScreen()
             }
             composable(Screen.Profile.route) {
-                ProfileScreen()
+                ProfileScreen(onSignOut = onSignOut)
             }
         }
     }
